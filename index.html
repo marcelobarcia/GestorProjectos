@@ -10,25 +10,33 @@
     <!-- Firebase SDKs -->
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+      import { getFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
       
       // Configuración de Firebase - Proyecto GestorProyectos
       const firebaseConfig = {
-        apiKey: "AIzaSyDDxQXDnUXXxUMm862DkeBU7XpffRtanYpkAWi4w", // API Key de tu proyecto
+        apiKey: "AIzaSyDDxQXDnUXXxUMm862DkeBU7XpffRtanYpkAWi4w",
         authDomain: "gestorproyectos-f8642.firebaseapp.com",
         projectId: "gestorproyectos-f8642",
         storageBucket: "gestorproyectos-f8642.appspot.com",
         messagingSenderId: "530228161352",
-        appId: "1:530228161352:web:2210eb4bb6fe0461e6617d" // App ID completo de tu proyecto
+        appId: "1:530228161352:web:2210eb4bb6fe0461e6617d"
       };
       
-      // Inicializar Firebase
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      
-      // Hacer disponible globalmente
-      window.firebaseApp = app;
-      window.firestoreDb = db;
+      try {
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Hacer disponible globalmente
+        window.firebaseApp = app;
+        window.firestoreDb = db;
+        window.firebaseReady = true;
+        
+        console.log('✅ Firebase configurado correctamente');
+      } catch (error) {
+        console.warn('⚠️ Firebase no disponible, trabajando offline:', error);
+        window.firebaseReady = false;
+      }
     </script>
     
     <link rel="stylesheet" href="css/styles.css">
@@ -346,7 +354,7 @@
     </div>
 
     <!-- Scripts JavaScript -->
-    <script src="js/firebase-manager.js"></script>
+    <script src="js/firebase-manager-simple.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/dom-selectors.js"></script>
     <script src="js/project-manager.js"></script>

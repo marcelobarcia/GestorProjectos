@@ -223,3 +223,71 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Estilos para Drag and Drop en Gantt */
+.gantt-task-bar, .gantt-phase-bar {
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+}
+
+.gantt-task-bar:hover, .gantt-phase-bar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.gantt-task-bar[draggable="true"] {
+    cursor: grab;
+}
+
+.gantt-task-bar[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+/* Efecto de arrastre */
+.gantt-task-bar.dragging {
+    opacity: 0.7;
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 50;
+}
+
+/* Líneas de conexión mejoradas */
+.gantt-connection-line {
+    transition: all 0.2s ease-in-out;
+}
+
+.gantt-connection-line:hover {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Indicador de drop zone */
+.gantt-drop-zone {
+    position: absolute;
+    border: 2px dashed #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.gantt-drop-zone.active {
+    opacity: 1;
+}
+
+/* Animación para nuevas posiciones */
+@keyframes slideToPosition {
+    from {
+        transform: translateX(-10px);
+        opacity: 0.8;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.gantt-task-bar.position-updated {
+    animation: slideToPosition 0.3s ease-out;
+}

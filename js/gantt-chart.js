@@ -74,36 +74,41 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
             bar.style.width = `${barWidth}px`;
             bar.style.top = task.type === 'phase' ? `${barTopPosition + 28}px` : `${barTopPosition + 12}px`;
             
-            // Hacer arrastrable
-            bar.draggable = true;
-            bar.style.cursor = 'grab';
-            
-            // Eventos de drag and drop
-            bar.addEventListener('dragstart', (e) => {
-                bar.style.cursor = 'grabbing';
-                bar.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', task.id);
-                e.dataTransfer.effectAllowed = 'move';
-                
-                // Crear indicador de drop zone
-                createDropZoneIndicator(chartWrapper);
-            });
-            
-            bar.addEventListener('dragend', (e) => {
+            // Solo hacer arrastrables las tareas normales (no fases ni hitos)
+            if (task.type === 'task') {
+                // Hacer arrastrable
+                bar.draggable = true;
                 bar.style.cursor = 'grab';
-                bar.classList.remove('dragging');
-                bar.style.transform = '';
                 
-                // Remover indicador de drop zone
-                removeDropZoneIndicator(chartWrapper);
-            });
-            
-            bar.addEventListener('drag', (e) => {
-                // Efecto visual durante el arrastre
-                if (e.clientX > 0) { // Solo si está siendo arrastrado activamente
-                    updateDropZoneIndicator(chartWrapper, e, timelineStart, scale);
-                }
-            });
+                // Eventos de drag and drop
+                bar.addEventListener('dragstart', (e) => {
+                    console.log('Iniciando drag de:', task.name); // Debug
+                    bar.style.cursor = 'grabbing';
+                    bar.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', task.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    
+                    // Crear indicador de drop zone
+                    createDropZoneIndicator(chartWrapper);
+                });
+                
+                bar.addEventListener('dragend', (e) => {
+                    console.log('Finalizando drag de:', task.name); // Debug
+                    bar.style.cursor = 'grab';
+                    bar.classList.remove('dragging');
+                    bar.style.transform = '';
+                    
+                    // Remover indicador de drop zone
+                    removeDropZoneIndicator(chartWrapper);
+                });
+                
+                bar.addEventListener('drag', (e) => {
+                    // Efecto visual durante el arrastre
+                    if (e.clientX > 0) { // Solo si está siendo arrastrado activamente
+                        updateDropZoneIndicator(chartWrapper, e, timelineStart, scale);
+                    }
+                });
+            }
             
             if (task.type === 'task') {
                 bar.style.backgroundColor = STATUS_COLORS[task.status] || '#64748b';
@@ -128,7 +133,7 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
     renderGanttConnections(chartWrapper, project);
     
     // Configurar drag and drop en el área del gráfico
-    setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth, totalTimelineDays);
+    setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth, scale);
     
     ganttChartArea.appendChild(chartWrapper);
 }
@@ -159,23 +164,26 @@ function renderGanttConnections(chartWrapper, project) {
             const taskBar = chartWrapper.querySelector(`[data-task-id="${task.id}"]`);
             
             if (predecessorBar && taskBar && predecessor) {
-                // Calcular puntos de conexión
-                let x1 = predecessorBar.offsetLeft;
-                if (!predecessor.isMilestone) {
-                    x1 += predecessorBar.offsetWidth;
-                } else {
-                    x1 += predecessorBar.offsetWidth / 2;
-                }
-
-                const y1 = predecessorBar.offsetTop + predecessorBar.offsetHeight / 2;
+                // Calcular puntos de conexión más precisos
+                let x1, y1, x2, y2;
                 
-                let x2 = taskBar.offsetLeft;
-                if (task.isMilestone) {
-                    x2 += taskBar.offsetWidth / 2 - 10;
+                // Punto de salida del predecesor
+                if (predecessor.isMilestone) {
+                    x1 = predecessorBar.offsetLeft + (predecessorBar.offsetWidth / 2);
+                    y1 = predecessorBar.offsetTop + (predecessorBar.offsetHeight / 2);
                 } else {
-                    x2 -= 10;
+                    x1 = predecessorBar.offsetLeft + predecessorBar.offsetWidth; // Final de la barra
+                    y1 = predecessorBar.offsetTop + (predecessorBar.offsetHeight / 2);
                 }
-                const y2 = taskBar.offsetTop + taskBar.offsetHeight / 2;
+                
+                // Punto de entrada de la tarea actual
+                if (task.isMilestone) {
+                    x2 = taskBar.offsetLeft + (taskBar.offsetWidth / 2) - 15;
+                    y2 = taskBar.offsetTop + (taskBar.offsetHeight / 2);
+                } else {
+                    x2 = taskBar.offsetLeft - 15; // Antes del inicio de la barra
+                    y2 = taskBar.offsetTop + (taskBar.offsetHeight / 2);
+                }
 
                 // Determinar si es conexión crítica
                 const isCritical = task.isCritical && predecessor.isCritical;
@@ -183,16 +191,16 @@ function renderGanttConnections(chartWrapper, project) {
                 const strokeWidth = isCritical ? '3' : '2';
                 const markerEnd = isCritical ? 'url(#arrowhead-critical)' : 'url(#arrowhead-normal)';
 
-                // Crear línea de conexión con esquinas redondeadas
-                const midX = x1 + (x2 - x1) * 0.7;
-                
+                // Crear línea de conexión más simple y directa
                 const path = document.createElementNS(svgNS, 'path');
-                if (Math.abs(y2 - y1) < 5) {
-                    // Línea horizontal directa
+                
+                if (Math.abs(y2 - y1) < 10 && x2 > x1) {
+                    // Línea horizontal directa si están casi al mismo nivel
                     path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
                 } else {
-                    // Línea con esquinas redondeadas
-                    path.setAttribute('d', `M ${x1} ${y1} L ${midX} ${y1} Q ${midX + 10} ${y1} ${midX + 10} ${y1 + (y2 > y1 ? 10 : -10)} L ${midX + 10} ${y2 + (y2 > y1 ? -10 : 10)} Q ${midX + 10} ${y2} ${midX + 20} ${y2} L ${x2} ${y2}`);
+                    // Línea en forma de escalón para mejor legibilidad
+                    const midX = x1 + Math.max(20, (x2 - x1) * 0.5);
+                    path.setAttribute('d', `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`);
                 }
                 
                 path.setAttribute('stroke', strokeColor);
@@ -228,12 +236,18 @@ function renderGanttConnections(chartWrapper, project) {
 }
 
 // Configurar drag and drop para el gráfico de Gantt
-function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth, totalTimelineDays) {
-    const scale = totalWidth / totalTimelineDays;
+function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth, scale) {
     
     chartWrapper.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+        // Mostrar indicador visual
+        chartWrapper.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+    });
+    
+    chartWrapper.addEventListener('dragleave', (e) => {
+        // Remover indicador visual
+        chartWrapper.style.backgroundColor = '';
     });
     
     chartWrapper.addEventListener('drop', (e) => {

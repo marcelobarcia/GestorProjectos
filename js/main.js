@@ -73,7 +73,7 @@ async function initializeApp() {
 
 function addFirebaseStatusIndicator() {
     const header = document.querySelector('header .flex');
-    if (header) {
+    if (header && !document.getElementById('firebase-status')) {
         const statusContainer = document.createElement('div');
         statusContainer.className = 'flex items-center gap-2 text-sm text-slate-600';
         statusContainer.innerHTML = `
@@ -81,11 +81,8 @@ function addFirebaseStatusIndicator() {
             <div id="firebase-status" class="w-3 h-3 bg-gray-400 rounded-full" title="Conectando..."></div>
         `;
         
-        // Insertar antes del botón de eliminar proyecto
-        const deleteBtn = document.getElementById('delete-project-btn');
-        if (deleteBtn) {
-            header.insertBefore(statusContainer, deleteBtn);
-        }
+        // Simplemente agregar al final del header
+        header.appendChild(statusContainer);
     }
 }
 

@@ -79,13 +79,21 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
                 // Hacer arrastrable
                 bar.draggable = true;
                 bar.style.cursor = 'grab';
+                bar.setAttribute('data-draggable', 'true');
+                
+                console.log('Configurando drag para:', task.name, 'ID:', task.id); // Debug
                 
                 // Eventos de drag and drop
                 bar.addEventListener('dragstart', (e) => {
-                    console.log('Iniciando drag de:', task.name); // Debug
+                    console.log('🎯 Drag START:', task.name, task.id);
+                    e.stopPropagation();
                     bar.style.cursor = 'grabbing';
                     bar.classList.add('dragging');
                     e.dataTransfer.setData('text/plain', task.id);
+                    e.dataTransfer.setData('application/json', JSON.stringify({
+                        taskId: task.id,
+                        taskName: task.name
+                    }));
                     e.dataTransfer.effectAllowed = 'move';
                     
                     // Crear indicador de drop zone
@@ -93,7 +101,7 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
                 });
                 
                 bar.addEventListener('dragend', (e) => {
-                    console.log('Finalizando drag de:', task.name); // Debug
+                    console.log('🏁 Drag END:', task.name);
                     bar.style.cursor = 'grab';
                     bar.classList.remove('dragging');
                     bar.style.transform = '';
@@ -104,10 +112,14 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
                 
                 bar.addEventListener('drag', (e) => {
                     // Efecto visual durante el arrastre
-                    if (e.clientX > 0) { // Solo si está siendo arrastrado activamente
+                    if (e.clientX > 0 && e.clientY > 0) {
                         updateDropZoneIndicator(chartWrapper, e, timelineStart, scale);
                     }
                 });
+            } else {
+                // Para fases y hitos, cursor normal
+                bar.style.cursor = 'default';
+                bar.setAttribute('data-draggable', 'false');
             }
             
             if (task.type === 'task') {
@@ -139,104 +151,103 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
 }
 
 function renderGanttConnections(chartWrapper, project) {
+    // Remover SVG existente si lo hay
+    const existingSvg = chartWrapper.querySelector('#gantt-connections');
+    if (existingSvg) {
+        existingSvg.remove();
+    }
+    
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('id', 'gantt-connections');
-    svg.setAttribute('class', 'absolute top-0 left-0 w-full h-full pointer-events-none');
-    svg.style.zIndex = '5';
+    svg.setAttribute('class', 'absolute inset-0 pointer-events-none');
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.zIndex = '15';
+    svg.style.overflow = 'visible';
     
     // Definir marcadores para las flechas
     svg.innerHTML = `
         <defs>
-            <marker id="arrowhead-normal" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" stroke="#3b82f6" stroke-width="1"/>
+            <marker id="arrowhead-normal" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/>
             </marker>
-            <marker id="arrowhead-critical" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" stroke="#ef4444" stroke-width="1"/>
+            <marker id="arrowhead-critical" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
             </marker>
         </defs>
     `;
     
-    project.tasks.forEach((task) => {
-        if (task.predecessorId) {
-            const predecessor = project.tasks.find(t => t.id === task.predecessorId);
-            const predecessorBar = chartWrapper.querySelector(`[data-task-id="${task.predecessorId}"]`);
-            const taskBar = chartWrapper.querySelector(`[data-task-id="${task.id}"]`);
-            
-            if (predecessorBar && taskBar && predecessor) {
-                // Calcular puntos de conexión más precisos
-                let x1, y1, x2, y2;
+    // Usar setTimeout para asegurar que las barras estén renderizadas
+    setTimeout(() => {
+        project.tasks.forEach((task) => {
+            if (task.predecessorId) {
+                const predecessor = project.tasks.find(t => t.id === task.predecessorId);
+                const predecessorBar = chartWrapper.querySelector(`[data-task-id="${task.predecessorId}"]`);
+                const taskBar = chartWrapper.querySelector(`[data-task-id="${task.id}"]`);
                 
-                // Punto de salida del predecesor
-                if (predecessor.isMilestone) {
-                    x1 = predecessorBar.offsetLeft + (predecessorBar.offsetWidth / 2);
-                    y1 = predecessorBar.offsetTop + (predecessorBar.offsetHeight / 2);
-                } else {
-                    x1 = predecessorBar.offsetLeft + predecessorBar.offsetWidth; // Final de la barra
-                    y1 = predecessorBar.offsetTop + (predecessorBar.offsetHeight / 2);
-                }
-                
-                // Punto de entrada de la tarea actual
-                if (task.isMilestone) {
-                    x2 = taskBar.offsetLeft + (taskBar.offsetWidth / 2) - 15;
-                    y2 = taskBar.offsetTop + (taskBar.offsetHeight / 2);
-                } else {
-                    x2 = taskBar.offsetLeft - 15; // Antes del inicio de la barra
-                    y2 = taskBar.offsetTop + (taskBar.offsetHeight / 2);
-                }
+                if (predecessorBar && taskBar && predecessor) {
+                    // Calcular puntos de conexión relativos al chartWrapper
+                    let x1, y1, x2, y2;
+                    
+                    // Punto de salida del predecesor
+                    if (predecessor.isMilestone) {
+                        x1 = predecessorBar.offsetLeft + (predecessorBar.offsetWidth / 2);
+                        y1 = predecessorBar.offsetTop + (predecessorBar.offsetHeight / 2);
+                    } else {
+                        x1 = predecessorBar.offsetLeft + predecessorBar.offsetWidth;
+                        y1 = predecessorBar.offsetTop + (predecessorBar.offsetHeight / 2);
+                    }
+                    
+                    // Punto de entrada de la tarea actual
+                    if (task.isMilestone) {
+                        x2 = taskBar.offsetLeft + (taskBar.offsetWidth / 2) - 8;
+                        y2 = taskBar.offsetTop + (taskBar.offsetHeight / 2);
+                    } else {
+                        x2 = taskBar.offsetLeft - 8;
+                        y2 = taskBar.offsetTop + (taskBar.offsetHeight / 2);
+                    }
 
-                // Determinar si es conexión crítica
-                const isCritical = task.isCritical && predecessor.isCritical;
-                const strokeColor = isCritical ? '#ef4444' : '#3b82f6';
-                const strokeWidth = isCritical ? '3' : '2';
-                const markerEnd = isCritical ? 'url(#arrowhead-critical)' : 'url(#arrowhead-normal)';
+                    // Determinar si es conexión crítica
+                    const isCritical = task.isCritical && predecessor.isCritical;
+                    const strokeColor = isCritical ? '#ef4444' : '#3b82f6';
+                    const strokeWidth = isCritical ? '3' : '2';
+                    const markerEnd = isCritical ? 'url(#arrowhead-critical)' : 'url(#arrowhead-normal)';
 
-                // Crear línea de conexión más simple y directa
-                const path = document.createElementNS(svgNS, 'path');
-                
-                if (Math.abs(y2 - y1) < 10 && x2 > x1) {
-                    // Línea horizontal directa si están casi al mismo nivel
-                    path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
-                } else {
-                    // Línea en forma de escalón para mejor legibilidad
-                    const midX = x1 + Math.max(20, (x2 - x1) * 0.5);
-                    path.setAttribute('d', `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`);
-                }
-                
-                path.setAttribute('stroke', strokeColor);
-                path.setAttribute('stroke-width', strokeWidth);
-                path.setAttribute('fill', 'none');
-                path.setAttribute('marker-end', markerEnd);
-                path.setAttribute('opacity', '0.8');
-                
-                // Agregar efecto hover
-                path.setAttribute('class', 'gantt-connection-line');
-                path.style.cursor = 'pointer';
-                
-                // Tooltip informativo
-                const connectionTitle = `Dependencia: ${predecessor.name} → ${task.name}${isCritical ? ' (Ruta Crítica)' : ''}`;
-                path.setAttribute('title', connectionTitle);
-                
-                // Evento hover para resaltar
-                path.addEventListener('mouseenter', () => {
-                    path.setAttribute('stroke-width', parseInt(strokeWidth) + 1);
-                    path.setAttribute('opacity', '1');
-                });
-                
-                path.addEventListener('mouseleave', () => {
+                    // Crear línea de conexión tipo escalón
+                    const path = document.createElementNS(svgNS, 'path');
+                    
+                    if (Math.abs(y2 - y1) < 5 && x2 > x1) {
+                        // Línea horizontal directa
+                        path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+                    } else {
+                        // Línea en escalón
+                        const midX = x1 + Math.max(15, (x2 - x1) * 0.6);
+                        path.setAttribute('d', `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`);
+                    }
+                    
+                    path.setAttribute('stroke', strokeColor);
                     path.setAttribute('stroke-width', strokeWidth);
-                    path.setAttribute('opacity', '0.8');
-                });
-                
-                svg.appendChild(path);
+                    path.setAttribute('fill', 'none');
+                    path.setAttribute('marker-end', markerEnd);
+                    path.setAttribute('opacity', '0.9');
+                    
+                    // Tooltip informativo
+                    const connectionTitle = `${predecessor.name} → ${task.name}${isCritical ? ' (Ruta Crítica)' : ''}`;
+                    path.setAttribute('title', connectionTitle);
+                    
+                    svg.appendChild(path);
+                }
             }
-        }
-    });
+        });
+    }, 50); // Pequeño delay para asegurar renderizado
+    
     chartWrapper.appendChild(svg);
 }
 
 // Configurar drag and drop para el gráfico de Gantt
 function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth, scale) {
+    console.log('🔧 Configurando drag and drop en chartWrapper');
     
     chartWrapper.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -246,23 +257,42 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
     });
     
     chartWrapper.addEventListener('dragleave', (e) => {
+        // Solo remover si realmente sale del área
+        if (!chartWrapper.contains(e.relatedTarget)) {
+            chartWrapper.style.backgroundColor = '';
+        }
+    });
+
+    chartWrapper.addEventListener('drop', (e) => {
+        console.log('💧 DROP EVENT detectado');
+        e.preventDefault();
+        e.stopPropagation();
+        
         // Remover indicador visual
         chartWrapper.style.backgroundColor = '';
-    });
-    
-    chartWrapper.addEventListener('drop', (e) => {
-        e.preventDefault();
+        
         const taskId = e.dataTransfer.getData('text/plain');
+        console.log('📦 Task ID del drop:', taskId);
+        
         const task = project.tasks.find(t => t.id === taskId);
         
-        if (!task || task.type === 'phase') {
+        if (!task) {
+            console.warn('❌ Tarea no encontrada:', taskId);
+            return;
+        }
+        
+        if (task.type === 'phase') {
             showNotification('No se pueden mover las fases', 'warning');
             return;
         }
         
+        console.log('✅ Procesando drop de:', task.name);
+        
         // Calcular nueva fecha basada en la posición del drop
         const rect = chartWrapper.getBoundingClientRect();
         const dropX = e.clientX - rect.left + chartWrapper.scrollLeft;
+        
+        console.log('📍 Posición drop:', dropX, 'Escala:', scale);
         
         // Snap to day boundaries para mayor precisión
         const daysDiff = Math.round(dropX / scale);
@@ -291,6 +321,8 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         const newStart = formatDateForInput(newStartDate);
         const newEnd = formatDateForInput(newEndDate);
         
+        console.log('📅 Nueva fecha:', newStart, 'a', newEnd);
+        
         // Verificar si realmente cambió
         if (task.start === newStart) {
             showNotification('La tarea ya está en esa posición', 'info');
@@ -314,14 +346,7 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         // Guardar cambios
         updateProject(project);
         
-        // Agregar clase de animación
-        setTimeout(() => {
-            const updatedBar = chartWrapper.querySelector(`[data-task-id="${taskId}"]`);
-            if (updatedBar) {
-                updatedBar.classList.add('position-updated');
-                setTimeout(() => updatedBar.classList.remove('position-updated'), 300);
-            }
-        }, 100);
+        console.log('🎉 Drop completado exitosamente');
     });
 }
 

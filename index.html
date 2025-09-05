@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Proyectos - Carta Gantt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+      
+      // Configuración de Firebase - Proyecto GestorProyectos
+      const firebaseConfig = {
+        apiKey: "AIzaSyDDxQXDnUXXxUMm862DkeBU7XpffRtanYpkAWi4w", // API Key de tu proyecto
+        authDomain: "gestorproyectos-f8642.firebaseapp.com",
+        projectId: "gestorproyectos-f8642",
+        storageBucket: "gestorproyectos-f8642.appspot.com",
+        messagingSenderId: "530228161352",
+        appId: "1:530228161352:web:2210eb4bb6fe0461e6617d" // App ID completo de tu proyecto
+      };
+      
+      // Inicializar Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      
+      // Hacer disponible globalmente
+      window.firebaseApp = app;
+      window.firestoreDb = db;
+    </script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-6">
+        <header class="mb-6 bg-white p-4 rounded-lg shadow-md">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex-grow">
+                    <input type="text" id="project-name-input" class="text-2xl font-bold text-slate-800 bg-transparent p-1 w-full md:w-auto">
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="relative">
+                        <button id="project-menu-btn" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-md hover:bg-slate-300 transition flex items-center gap-2">
+                            <span>Mis Proyectos</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="project-menu" class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                            <div id="project-list" class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                <!-- Project items will be injected here -->
+                            </div>
+                            <div class="border-t border-gray-100"></div>
+                            <a href="#" id="new-project-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Nuevo Proyecto...</a>
+                        </div>
+                    </div>
+                     <button id="delete-project-btn" class="bg-red-100 text-red-700 font-semibold p-2 rounded-md hover:bg-red-200 transition" title="Eliminar Proyecto Actual">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                     </button>
+                </div>
+            </div>
+        </header>
+
+        <div id="main-content" class="grid md:grid-cols-12 gap-6">
+            
+            <!-- Panel de Controles -->
+            <aside class="md:col-span-4 bg-white p-6 rounded-lg shadow-md self-start">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Configuración</h2>
+                     <div class="flex items-center space-x-2">
+                        <label for="work-weekends-toggle" class="text-sm font-medium text-slate-700">Incluir fines de semana</label>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="toggle" id="work-weekends-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                            <label for="work-weekends-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Añadir Tarea/Fase -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 border-t pt-4">Añadir Elemento</h2>
+                    <form id="add-task-form" class="space-y-4">
+                        <div>
+                            <label for="task-type" class="block text-sm font-medium text-slate-700">Tipo</label>
+                            <select id="task-type" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="task">Actividad</option>
+                                <option value="phase">Fase</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="task-name" class="block text-sm font-medium text-slate-700">Nombre</label>
+                            <input type="text" id="task-name" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Ej: Diseño de UI">
+                        </div>
+                        <div id="milestone-container">
+                            <div class="flex items-center">
+                                <input id="task-milestone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                <label for="task-milestone" class="ml-2 block text-sm font-medium text-slate-700">Es un Hito</label>
+                            </div>
+                        </div>
+                         <div id="predecessor-container">
+                            <label for="task-predecessor" class="block text-sm font-medium text-slate-700">Predecesora</label>
+                            <select id="task-predecessor" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></select>
+                        </div>
+                        <div id="resource-container">
+                            <label for="task-resource" class="block text-sm font-medium text-slate-700">Asignar Recurso</label>
+                            <select id="task-resource" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></select>
+                        </div>
+                        <div id="status-container">
+                             <label for="task-status" class="block text-sm font-medium text-slate-700">Estado</label>
+                            <select id="task-status" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                                <option>Pendiente</option>
+                                <option>En Progreso</option>
+                                <option>Completada</option>
+                                <option>Atrasada</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="task-start" class="block text-sm font-medium text-slate-700">Fecha de Inicio</label>
+                                <input type="date" id="task-start" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                            </div>
+                             <div>
+                                <label for="task-duration" class="block text-sm font-medium text-slate-700">Duración (días)</label>
+                                <input type="number" id="task-duration" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" min="1" value="1">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="task-end" class="block text-sm font-medium text-slate-700">Fecha de Fin (calculada)</label>
+                            <input type="date" id="task-end" required class="mt-1 block w-full rounded-md bg-slate-100 sm:text-sm" disabled>
+                        </div>
+                        <div id="progress-container">
+                            <label for="task-progress" class="block text-sm font-medium text-slate-700">Grado de Avance: <span id="progress-value">0</span>%</label>
+                            <input type="range" id="task-progress" min="0" max="100" value="0" class="mt-1 block w-full">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                            Añadir
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Gestionar Recursos -->
+                <div class="mt-8 pt-6 border-t border-slate-200">
+                    <h2 class="text-xl font-semibold mb-4">Gestionar Recursos</h2>
+                     <form id="add-resource-form" class="flex gap-2 mb-4">
+                        <input type="text" id="resource-name" placeholder="Nombre" required class="block w-full rounded-md border-slate-300 shadow-sm sm:text-sm">
+                        <input type="text" id="resource-role" placeholder="Rol" required class="block w-full rounded-md border-slate-300 shadow-sm sm:text-sm">
+                        <button type="submit" class="bg-slate-600 text-white font-semibold p-2 rounded-md hover:bg-slate-700 transition">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                    </form>
+                    <div id="resource-list-container" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                </div>
+                
+                 <!-- Gestionar Líneas Base -->
+                <div class="mt-8 pt-6 border-t border-slate-200">
+                    <h2 class="text-xl font-semibold mb-4">Líneas Base</h2>
+                    <div class="space-y-4">
+                        <button id="save-baseline-btn" class="w-full bg-slate-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-slate-700 transition">
+                            Guardar Línea Base Actual
+                        </button>
+                        <div>
+                            <label for="baseline-select" class="block text-sm font-medium text-slate-700">Visualizar Línea Base</label>
+                            <select id="baseline-select" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></select>
+                        </div>
+                        <div id="baseline-list-container" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Área Principal de Vistas -->
+            <div class="md:col-span-8">
+                 <div class="mb-4">
+                     <div id="main-view-switcher" class="flex items-center border-b border-slate-200">
+                        <button data-view="gantt" class="main-view-btn font-semibold py-2 px-4 border-b-2 border-blue-600 text-blue-600">Gantt</button>
+                        <button data-view="dashboard" class="main-view-btn font-semibold py-2 px-4 border-b-2 border-transparent text-slate-500">Dashboard</button>
+                        <button data-view="calendar" class="main-view-btn font-semibold py-2 px-4 border-b-2 border-transparent text-slate-500">Calendario</button>
+                    </div>
+                 </div>
+
+                <main id="gantt-view" class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="flex justify-between items-center p-2 border-b border-slate-200">
+                        <div class="flex items-center space-x-2 ml-2">
+                            <label for="critical-path-toggle" class="text-sm font-medium text-slate-700">Ruta Crítica</label>
+                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="critical-path-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                <label for="critical-path-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
+                            </div>
+                        </div>
+                        <div id="gantt-view-switcher" class="flex items-center bg-slate-200 rounded-md p-1 text-sm font-semibold">
+                            <button data-view="day" class="view-btn active px-3 py-1 rounded-md">Día</button>
+                            <button data-view="week" class="view-btn px-3 py-1 rounded-md">Semana</button>
+                            <button data-view="month" class="view-btn px-3 py-1 rounded-md">Mes</button>
+                            <button data-view="year" class="view-btn px-3 py-1 rounded-md">Año</button>
+                        </div>
+                    </div>
+                    <div id="gantt-container" class="w-full h-[70vh] flex flex-col">
+                        <div class="flex border-b border-slate-200 bg-slate-50 font-semibold text-sm sticky top-0 z-20">
+                            <div class="w-1/3 p-3 border-r border-slate-200">Nombre de Tarea / Fase</div>
+                            <div class="w-2/3 gantt-grid-container" id="gantt-header-timeline"></div>
+                        </div>
+                        <div class="flex-grow flex overflow-y-auto min-h-0">
+                            <div class="w-1/3 border-r border-slate-200" id="gantt-task-list"></div>
+                            <div class="w-2/3 gantt-grid-container relative" id="gantt-chart-area"></div>
+                        </div>
+                        <!-- Panel de Información del Proyecto -->
+                        <div class="border-t border-slate-200 bg-slate-50 p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 text-sm">
+                                <div class="gantt-info-metric flex flex-col items-center">
+                                    <div class="text-xs text-slate-500 mb-1">Total Tareas</div>
+                                    <div id="gantt-info-total-tasks" class="text-lg font-bold text-slate-800">0</div>
+                                </div>
+                                <div class="gantt-info-metric flex flex-col items-center">
+                                    <div class="text-xs text-slate-500 mb-1">Progreso Global</div>
+                                    <div id="gantt-info-progress" class="text-lg font-bold text-blue-600">0%</div>
+                                </div>
+                                <div class="gantt-info-metric flex flex-col items-center">
+                                    <div class="text-xs text-slate-500 mb-1">Días Restantes</div>
+                                    <div id="gantt-info-days-left" class="text-lg font-bold text-orange-600">0</div>
+                                </div>
+                                <div class="gantt-info-metric flex flex-col items-center">
+                                    <div class="text-xs text-slate-500 mb-1">Ruta Crítica</div>
+                                    <div id="gantt-info-critical-tasks" class="text-lg font-bold text-red-600">0</div>
+                                </div>
+                                <div class="gantt-info-metric flex flex-col items-center">
+                                    <div class="text-xs text-slate-500 mb-1">Recursos Activos</div>
+                                    <div id="gantt-info-active-resources" class="text-lg font-bold text-green-600">0</div>
+                                </div>
+                            </div>
+                            <!-- Información Adicional -->
+                            <div class="mt-3 pt-3 border-t border-slate-300">
+                                <div class="flex flex-wrap items-center justify-between text-xs text-slate-600">
+                                    <div class="flex items-center gap-4">
+                                        <span id="gantt-info-start-date">Inicio: -</span>
+                                        <span id="gantt-info-end-date">Fin: -</span>
+                                        <span id="gantt-info-duration">Duración: 0 días</span>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            <span>Completada</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                                            <span>En Progreso</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                            <span>Atrasada</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-slate-500 rounded-full"></span>
+                                            <span>Pendiente</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                
+                <main id="dashboard-view" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div class="kpi-card xl:col-span-1 flex flex-col items-center justify-center">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Progreso General</h3>
+                            <div class="relative w-40 h-40">
+                                <svg class="w-full h-full" viewBox="0 0 36 36">
+                                    <path class="text-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path id="kpi-progress-circle" class="text-blue-600 transition-all duration-500" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div id="kpi-progress-text" class="absolute inset-0 flex items-center justify-center text-3xl font-bold text-slate-800">0%</div>
+                            </div>
+                        </div>
+                        <div class="kpi-card xl:col-span-2">
+                             <h3 class="text-lg font-semibold text-slate-800 mb-4">Estado de Tareas</h3>
+                             <div class="grid grid-cols-2 gap-4 text-center">
+                                 <div><p id="kpi-tasks-completed" class="text-3xl font-bold text-green-600">0</p><p class="text-sm text-slate-500">Completadas</p></div>
+                                 <div><p id="kpi-tasks-overdue" class="text-3xl font-bold text-red-600">0</p><p class="text-sm text-slate-500">Atrasadas</p></div>
+                                 <div><p id="kpi-tasks-inprogress" class="text-3xl font-bold text-yellow-600">0</p><p class="text-sm text-slate-500">En Progreso</p></div>
+                                 <div><p id="kpi-tasks-pending" class="text-3xl font-bold text-slate-600">0</p><p class="text-sm text-slate-500">Pendientes</p></div>
+                             </div>
+                        </div>
+                        <div class="kpi-card xl:col-span-3 grid grid-cols-3 gap-4 text-center">
+                            <div><p id="kpi-duration" class="text-2xl font-bold text-slate-800">0</p><p class="text-sm text-slate-500">Duración Total (días)</p></div>
+                            <div><p id="kpi-days-remaining" class="text-2xl font-bold text-slate-800">0</p><p class="text-sm text-slate-500">Días Restantes</p></div>
+                            <div><p id="kpi-end-date" class="text-2xl font-bold text-slate-800">-</p><p class="text-sm text-slate-500">Fecha de Fin</p></div>
+                        </div>
+                        <div class="kpi-card xl:col-span-3">
+                             <h3 class="text-lg font-semibold text-slate-800 mb-4">Carga de Trabajo por Recurso</h3>
+                             <div id="kpi-resource-workload" class="space-y-3"></div>
+                        </div>
+                    </div>
+                </main>
+                
+                <main id="calendar-view" class="hidden bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-4">Gestionar Feriados</h2>
+                    <form id="add-holiday-form" class="flex gap-2 mb-6 p-4 bg-slate-50 rounded-lg">
+                        <input type="date" id="holiday-date" required class="block w-full rounded-md border-slate-300 shadow-sm sm:text-sm">
+                        <input type="text" id="holiday-name" placeholder="Nombre del feriado" required class="block w-full rounded-md border-slate-300 shadow-sm sm:text-sm">
+                        <button type="submit" class="bg-blue-600 text-white font-semibold p-2 rounded-md hover:bg-blue-700 transition">Añadir</button>
+                    </form>
+                    <div id="holiday-list-container" class="space-y-2 max-h-96 overflow-y-auto"></div>
+                </main>
+            </div>
+        </div>
+
+        <div id="no-project-view" class="hidden text-center py-20">
+            <h2 class="text-3xl font-bold text-slate-700">Bienvenido a tu Gestor de Proyectos</h2>
+            <p class="text-slate-500 mt-2 mb-6">Parece que no tienes ningún proyecto. ¡Crea uno para empezar!</p>
+            <button id="create-first-project-btn" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition text-lg">Crear Mi Primer Proyecto</button>
+        </div>
+    </div>
+    
+    <!-- Modal de Edición -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6">Editar Elemento</h2>
+            <form id="edit-task-form" class="space-y-4">
+                <input type="hidden" id="edit-task-id">
+                <div><label for="edit-task-type" class="block text-sm font-medium text-slate-700">Tipo</label><select id="edit-task-type" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="task">Actividad</option><option value="phase">Fase</option></select></div>
+                <div><label for="edit-task-name" class="block text-sm font-medium text-slate-700">Nombre</label><input type="text" id="edit-task-name" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></div>
+                <div id="edit-milestone-container">
+                    <div class="flex items-center">
+                        <input id="edit-task-milestone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <label for="edit-task-milestone" class="ml-2 block text-sm font-medium text-slate-700">Es un Hito</label>
+                    </div>
+                </div>
+                 <div id="edit-predecessor-container">
+                    <label for="edit-task-predecessor" class="block text-sm font-medium text-slate-700">Predecesora</label>
+                    <select id="edit-task-predecessor" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></select>
+                </div>
+                <div id="edit-resource-container"><label for="edit-task-resource" class="block text-sm font-medium text-slate-700">Recurso</label><select id="edit-task-resource" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></select></div>
+                <div id="edit-status-container"><label for="edit-task-status" class="block text-sm font-medium text-slate-700">Estado</label><select id="edit-task-status" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option>Pendiente</option><option>En Progreso</option><option>Completada</option><option>Atrasada</option></select></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label for="edit-task-start" class="block text-sm font-medium text-slate-700">Fecha de Inicio</label><input type="date" id="edit-task-start" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></div>
+                    <div><label for="edit-task-duration" class="block text-sm font-medium text-slate-700">Duración (días)</label><input type="number" id="edit-task-duration" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" min="1"></div>
+                </div>
+                <div><label for="edit-task-end" class="block text-sm font-medium text-slate-700">Fecha de Fin (calculada)</label><input type="date" id="edit-task-end" required class="mt-1 block w-full rounded-md bg-slate-100" disabled></div>
+                <div id="edit-progress-container"><label for="edit-task-progress" class="block text-sm font-medium text-slate-700">Grado de Avance: <span id="edit-progress-value">0</span>%</label><input type="range" id="edit-task-progress" min="0" max="100" value="0" class="mt-1 block w-full"></div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-edit" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-md hover:bg-slate-300 transition">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts JavaScript -->
+    <script src="js/firebase-manager.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/dom-selectors.js"></script>
+    <script src="js/project-manager.js"></script>
+    <script src="js/date-utils.js"></script>
+    <script src="js/schedule-calculator.js"></script>
+    <script src="js/ui-renderer.js"></script>
+    <script src="js/gantt-renderer.js"></script>
+    <script src="js/gantt-timeline.js"></script>
+    <script src="js/gantt-chart.js"></script>
+    <script src="js/dashboard-renderer.js"></script>
+    <script src="js/form-handlers.js"></script>
+    <script src="js/event-listeners.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

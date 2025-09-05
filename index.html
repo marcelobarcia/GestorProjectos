@@ -10,16 +10,17 @@
     <!-- Firebase SDKs -->
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-      import { getFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
       
       // Configuración de Firebase - Proyecto GestorProyectos
       const firebaseConfig = {
-        apiKey: "AIzaSyDDxQXDnUXXxUMm862DkeBU7XpffRtanYpkAWi4w",
-        authDomain: "gestorproyectos-f8642.firebaseapp.com",
+        apiKey: "AIzaSyAXDnAqx86zOkeBU7XpffRtanYypKAWi4w",
+        authDomain: "gestorproyectos-f8642.firebaseapp.com", 
         projectId: "gestorproyectos-f8642",
-        storageBucket: "gestorproyectos-f8642.appspot.com",
+        storageBucket: "gestorproyectos-f8642.firebasestorage.app",
         messagingSenderId: "530228161352",
-        appId: "1:530228161352:web:2210eb4bb6fe0461e6617d"
+        appId: "1:530228161352:web:2210eb4bb6fe0461e6617d",
+        measurementId: "G-GFQCTW4S9W"
       };
       
       try {
@@ -32,9 +33,23 @@
         window.firestoreDb = db;
         window.firebaseReady = true;
         
-        console.log('✅ Firebase configurado correctamente');
+        console.log('✅ Firebase configurado correctamente para Docker');
+        
+        // Verificar conexión con una operación simple
+        setTimeout(async () => {
+          try {
+            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const testRef = doc(db, 'test', 'connection');
+            await getDoc(testRef);
+            console.log('🟢 Conexión Firebase verificada');
+          } catch (error) {
+            console.warn('⚠️ Error en la conexión Firebase:', error.message);
+            console.log('💡 Verifica las reglas de Firestore');
+          }
+        }, 1000);
+        
       } catch (error) {
-        console.warn('⚠️ Firebase no disponible, trabajando offline:', error);
+        console.error('❌ Error inicializando Firebase:', error);
         window.firebaseReady = false;
       }
     </script>
@@ -354,7 +369,7 @@
     </div>
 
     <!-- Scripts JavaScript -->
-    <script src="js/firebase-manager-simple.js"></script>
+    <script src="js/firebase-manager.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/dom-selectors.js"></script>
     <script src="js/project-manager.js"></script>

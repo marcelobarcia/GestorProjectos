@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  gestor-proyectos:
+    build: .
+    container_name: gestor-proyectos
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Opcional: montar logs para debugging
+      - ./logs:/var/log/nginx
+    networks:
+      - gestor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  gestor-network:
+    driver: bridge

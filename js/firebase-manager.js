@@ -8,38 +8,24 @@ class FirebaseManager {
 
     async waitForFirebase() {
         // Esperar a que Firebase esté disponible
-        let attempts = 0;
-        while (!window.firestoreDb && attempts < 50) {
+        while (!window.firestoreDb) {
             await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
         }
-        
-        if (window.firestoreDb) {
-            this.db = window.firestoreDb;
-            this.isInitialized = true;
-            console.log('✅ Firebase conectado exitosamente');
-        } else {
-            console.warn('⚠️ Firebase no disponible, trabajando en modo offline');
-            this.isInitialized = false;
-        }
+        this.db = window.firestoreDb;
+        this.isInitialized = true;
+        console.log('Firebase initialized successfully');
     }
 
     async ensureInitialized() {
         if (!this.isInitialized) {
             await this.initPromise;
         }
-        return this.isInitialized;
     }
 
     // Guardar todos los proyectos
     async saveProjects(projects) {
         try {
-            const isReady = await this.ensureInitialized();
-            if (!isReady) {
-                console.warn('⚠️ Firebase no disponible, datos guardados localmente');
-                return false;
-            }
-
+            await this.ensureInitialized();
             const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
             
             const projectsRef = doc(this.db, 'gestorProyectos', 'allProjects');
@@ -49,13 +35,12 @@ class FirebaseManager {
                 version: '1.0'
             });
             
-            console.log('✅ Proyectos guardados en Firebase');
+            console.log('Projects saved to Firebase successfully');
             return true;
         } catch (error) {
-            console.warn('⚠️ Error guardando en Firebase:', error.message);
+            console.error('Error saving projects to Firebase:', error);
             return false;
         }
-    }
     }
 
     // Cargar todos los proyectos

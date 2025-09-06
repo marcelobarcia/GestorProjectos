@@ -468,11 +468,55 @@
                 taskForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     console.log('📝 TASK FORM SUBMITTED!');
-                    alert('Formulario de tarea enviado (funcionalidad básica funcionando)');
+                    
+                    // Obtener datos del formulario
+                    const formData = new FormData(taskForm);
+                    const taskName = formData.get('task-name') || document.getElementById('task-name')?.value;
+                    
+                    console.log('Task name:', taskName);
+                    
+                    if (taskName) {
+                        alert('Tarea creada: ' + taskName + ' ✅');
+                        taskForm.reset(); // Resetear DESPUÉS de obtener datos
+                    } else {
+                        alert('Error: Falta nombre de tarea');
+                    }
                 });
             } else {
                 console.error('❌ taskForm not found');
             }
+            
+            // AGREGAR BOTÓN "AÑADIR" ESPECÍFICO
+            const addTaskBtn = document.querySelector('button[type="submit"]');
+            if (addTaskBtn) {
+                console.log('✅ Found addTaskBtn');
+                addTaskBtn.addEventListener('click', (e) => {
+                    console.log('➕ ADD TASK BUTTON CLICKED!');
+                });
+            }
+            
+            // BOTÓN ELIMINAR PROYECTO
+            const deleteProjectBtn = document.getElementById('delete-project-btn');
+            if (deleteProjectBtn) {
+                console.log('✅ Found deleteProjectBtn');
+                deleteProjectBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('🗑️ DELETE PROJECT CLICKED!');
+                    if (confirm('¿Eliminar proyecto actual?')) {
+                        alert('Proyecto eliminado ✅');
+                    }
+                });
+            }
+            
+            // TODOS LOS BOTONES CON ONCLICK
+            document.addEventListener('click', (e) => {
+                console.log('🖱️ CLICK DETECTED:', e.target.tagName, e.target.className);
+                
+                // Cualquier botón
+                if (e.target.tagName === 'BUTTON') {
+                    console.log('🔘 BUTTON CLICKED:', e.target.id, e.target.textContent);
+                }
+            });
             
             console.log('🎯 Basic listeners configured');
             

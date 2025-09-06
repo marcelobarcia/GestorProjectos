@@ -605,175 +605,72 @@
                     e.stopPropagation();
                     console.log('🆕 NEW PROJECT BUTTON CLICKED');
                     
-                    // Método simple y directo
-                    let projectName;
                     try {
-                        projectName = window.prompt('Nombre del nuevo proyecto:');
-                    } catch (error) {
-                        console.error('Error with prompt:', error);
-                        projectName = 'Nuevo Proyecto ' + Date.now();
-                    }
-                    
-                    console.log('📝 Project name entered:', projectName, 'Type:', typeof projectName);
-                    
-                    if (projectName && projectName !== '' && projectName !== 'null') {
-                        try {
-                            const safeName = String(projectName);
-                            console.log('✅ Safe project name:', safeName);
-                            
-                            // Crear nuevo proyecto directamente
-                            const newProject = {
-                                id: Date.now(),
-                                name: safeName,
-                                tasks: [],
-                                resources: [],
-                                baselines: [],
-                                holidays: [],
-                                selectedBaselineId: null,
-                                currentGanttView: 'day',
-                                workWeekends: false,
-                                showCriticalPath: false,
-                                createdAt: new Date().toISOString()
-                            };
-                            
-                            // Agregar a la lista de proyectos
-                            if (!window.projects) {
-                                window.projects = [];
-                            }
-                            window.projects.push(newProject);
-                            window.activeProjectId = newProject.id;
-                            
-                            console.log('✅ New project created:', newProject);
-                            
-                            // PRIMERO mostrar mensaje de éxito con el nombre correcto
-                            const projectSuccessMessage = '🆕 PROYECTO CREADO: ' + safeName;
-                            console.log('Success message:', projectSuccessMessage);
-                            
-                            // DESPUÉS ejecutar operaciones asíncronas
-                            try {
-                                // Guardar en Firebase (sin esperar)
-                                if (window.saveProjects) {
-                                    window.saveProjects();
-                                }
-                                
-                                // Actualizar interfaz usando la función correcta
-                                if (window.render) {
-                                    window.render();
-                                    console.log('✅ Interface updated via window.render()');
-                                } else if (window.renderApp) {
-                                    window.renderApp();
-                                    console.log('✅ Interface updated via window.renderApp()');
-                                } else {
-                                    console.warn('⚠️ No render function available');
-                                }
-                            } catch (asyncError) {
-                                console.error('Error in async operations:', asyncError);
-                            }
-                            
-                            // Mostrar mensaje de éxito
-                            alert(projectSuccessMessage);
-                            
-                            // Actualizar la lista de proyectos manualmente
-                            window.updateProjectList = function() {
-                                const projectList = document.getElementById('project-list');
-                                if (projectList && window.projects) {
-                                    projectList.innerHTML = '';
-                                    window.projects.forEach(project => {
-                                        const projectItem = document.createElement('a');
-                                        projectItem.href = '#';
-                                        projectItem.className = 'block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100';
-                                        projectItem.setAttribute('role', 'menuitem');
-                                        projectItem.textContent = String(project.name); // Asegurar que sea string
-                                        projectItem.onclick = function(e) {
-                                            e.preventDefault();
-                                            window.activeProjectId = project.id;
-                                            console.log('✅ Project selected:', project.name);
-                                            // Actualizar el título del proyecto
-                                            const projectNameInput = document.getElementById('project-name-input');
-                                            if (projectNameInput) {
-                                                projectNameInput.value = String(project.name);
-                                            }
-                                            // Cerrar el menú
-                                            const projectMenu = document.getElementById('project-menu');
-                                            if (projectMenu) {
-                                                projectMenu.classList.add('hidden');
-                                            }
-                                            
-                                            // Sincronizar configuraciones del proyecto
-                                            if (window.syncProjectSettings) {
-                                                window.syncProjectSettings();
-                                            }
-                                            
-                                            // Re-renderizar si hay función disponible
-                                            if (window.render) {
-                                                window.render();
-                                            } else if (window.renderApp) {
-                                                window.renderApp();
-                                            }
-                                        };
-                                        projectList.appendChild(projectItem);
-                                    });
-                                    console.log('✅ Project list updated');
-                                }
-                            };
-                            
-                            // Ejecutar actualización de lista
-                            if (typeof window.updateProjectList === 'function') {
-                                window.updateProjectList();
-                            }
-                            
-                            // Cerrar el menú
-                            const projectMenu = document.getElementById('project-menu');
-                            if (projectMenu) {
-                                projectMenu.classList.add('hidden');
-                                console.log('✅ Project menu closed');
-                            }
-                            
-                            // Cerrar también el modal de información
-                            const infoModals = document.querySelectorAll('.fixed.inset-0.bg-gray-600.bg-opacity-50');
-                            infoModals.forEach(modal => {
-                                modal.style.display = 'none';
-                                modal.classList.add('hidden');
-                                console.log('✅ Info modal closed');
-                            });
-                            
-                            // Cerrar modales por clase y atributos específicos
-                            const dialogModals = document.querySelectorAll('[role="dialog"]');
-                            dialogModals.forEach(modal => {
-                                modal.style.display = 'none';
-                                modal.classList.add('hidden');
-                                console.log('✅ Dialog modal closed');
-                            });
-                            
-                            // Forzar el cierre del modal de información específico
-                            setTimeout(() => {
-                                const allModals = document.querySelectorAll('.fixed');
-                                allModals.forEach(modal => {
-                                    if (modal.textContent.includes('Información') || modal.textContent.includes('PROYECTO CREADO')) {
-                                        modal.style.display = 'none';
-                                        modal.classList.add('hidden');
-                                        console.log('✅ Forced modal closure');
-                                    }
-                                });
-                            }, 100);
-                            
-                        } catch (error) {
-                            console.error('❌ Error creating project:', error);
-                            alert('❌ Error al crear proyecto: ' + error.message);
+                        // Obtener nombre del proyecto
+                        let projectName = window.prompt('Nombre del nuevo proyecto:');
+                        
+                        if (!projectName || projectName === '' || projectName === 'null') {
+                            console.log('ℹ️ Project creation cancelled or invalid name');
+                            return;
                         }
-                    } else {
-                        if (projectName !== null) {
-                            console.log('❌ Invalid project name');
-                            alert('❌ El nombre del proyecto no puede estar vacío');
+                        
+                        const safeName = String(projectName);
+                        console.log('✅ Safe project name:', safeName);
+                        
+                        // Crear nuevo proyecto
+                        const newProject = {
+                            id: Date.now(),
+                            name: safeName,
+                            tasks: [],
+                            resources: [],
+                            baselines: [],
+                            holidays: [],
+                            selectedBaselineId: null,
+                            currentGanttView: 'day',
+                            workWeekends: false,
+                            showCriticalPath: false,
+                            createdAt: new Date().toISOString()
+                        };
+                        
+                        // Agregar a la lista de proyectos
+                        if (!window.projects) {
+                            window.projects = [];
+                        }
+                        window.projects.push(newProject);
+                        window.activeProjectId = newProject.id;
+                        
+                        console.log('✅ New project created:', newProject);
+                        
+                        // Guardar en Firebase de forma no bloqueante
+                        if (window.saveProjects) {
+                            window.saveProjects().catch(error => {
+                                console.error('Error saving to Firebase:', error);
+                            });
+                        }
+                        
+                        // Actualizar interfaz
+                        if (window.render) {
+                            window.render();
+                            console.log('✅ Interface updated via window.render()');
                         } else {
-                            console.log('ℹ️ User cancelled project creation');
+                            console.warn('⚠️ No render function available');
                         }
+                        
+                        // Mostrar mensaje de éxito
+                        setTimeout(() => {
+                            alert('🆕 PROYECTO CREADO: ' + safeName);
+                        }, 100);
+                        
+                    } catch (error) {
+                        console.error('❌ Error creating project:', error);
+                        alert('❌ Error al crear proyecto: ' + error.message);
                     }
                 });
-                console.log('✅ New project button listener configured');
             } else {
                 console.log('❌ new-project-btn not found');
             }
+            
+            console.log('✅ New project button listener configured');
             
             // Cerrar menú al hacer click fuera
             document.addEventListener('click', function(e) {

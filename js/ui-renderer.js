@@ -13,10 +13,26 @@ function updateProjectHeader(project) {
         // Verificar si el elemento existe antes de intentar actualizar
         const nameInput = document.getElementById('project-name-input');
         if (nameInput) {
-            let displayName = project.name;
+            // Asegurar que el nombre sea un string y no una promesa
+            let displayName = String(project.name || 'Proyecto sin nombre');
+            
+            // Verificar si es una promesa y manejarla
+            if (project.name && typeof project.name.then === 'function') {
+                console.warn('⚠️ Project name is a promise, resolving...');
+                project.name.then(resolvedName => {
+                    displayName = String(resolvedName || 'Proyecto sin nombre');
+                    nameInput.value = displayName;
+                    console.log('📝 Updated project header (async):', displayName);
+                }).catch(error => {
+                    console.error('❌ Error resolving project name promise:', error);
+                    displayName = 'Proyecto sin nombre';
+                    nameInput.value = displayName;
+                });
+                return; // Salir temprano para evitar actualización síncrona
+            }
             
             // Agregar indicador si estamos viendo una línea base
-            if (project.selectedBaselineId) {
+            if (project.selectedBaselineId && project.baselines) {
                 const selectedBaseline = project.baselines.find(b => b.id === project.selectedBaselineId);
                 if (selectedBaseline) {
                     displayName += ` [📊 ${selectedBaseline.name}]`;
@@ -55,15 +71,34 @@ function updateProjectDropdown() {
     }
     
     window.projects.forEach(p => {
-        console.log('📝 Adding project to dropdown:', p.name, 'ID:', p.id);
+        // Asegurar que el nombre sea un string
+        let projectName = String(p.name || 'Proyecto sin nombre');
+        
+        // Verificar si es una promesa
+        if (p.name && typeof p.name.then === 'function') {
+            projectName = 'Cargando...';
+            console.warn('⚠️ Project name is a promise for ID:', p.id);
+            // Resolver la promesa asíncronamente
+            p.name.then(resolvedName => {
+                p.name = String(resolvedName || 'Proyecto sin nombre');
+                // Re-renderizar el dropdown después de resolver
+                setTimeout(() => updateProjectDropdown(), 100);
+            }).catch(error => {
+                console.error('❌ Error resolving project name promise:', error);
+                p.name = 'Proyecto sin nombre';
+                setTimeout(() => updateProjectDropdown(), 100);
+            });
+        }
+        
+        console.log('📝 Adding project to dropdown:', projectName, 'ID:', p.id);
         const item = document.createElement('a');
         item.href = '#';
         item.dataset.id = p.id;
         item.className = `block px-4 py-2 text-sm ${p.id === window.activeProjectId ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`;
-        item.textContent = p.name;
+        item.textContent = projectName;
         item.onclick = (e) => { 
             e.preventDefault(); 
-            console.log('🔄 Switching to project:', p.name, 'ID:', p.id);
+            console.log('🔄 Switching to project:', projectName, 'ID:', p.id);
             window.activeProjectId = p.id; 
             
             if (projectMenuElement) {

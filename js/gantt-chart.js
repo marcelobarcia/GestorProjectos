@@ -8,8 +8,7 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
     
     chartArea.innerHTML = '';
     const chartWrapper = document.createElement('div');
-           const direction = daysMoved > 0 ? 'adelantada' : 'atrasada';
-        window.showNotification(`"${task.name}" ${direction} ${Math.abs(daysMoved)} día(s)`, 'success');hartWrapper.className = 'relative w-full h-full';
+    chartWrapper.className = 'relative w-full h-full';
     const rowHeight = 64; // Height for each task row
     const totalRows = project.tasks.length;
     const minHeight = Math.max(400, totalRows * rowHeight);

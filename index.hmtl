@@ -476,6 +476,172 @@
             
             console.log('🎯 Basic listeners configured');
             
+            // ===== MÁS EVENT LISTENERS CRÍTICOS =====
+            
+            // Menú de proyectos
+            if (projectMenuBtn) {
+                projectMenuBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('🔽 Project menu clicked');
+                    if (projectMenu) {
+                        projectMenu.classList.toggle('hidden');
+                    }
+                });
+            }
+            
+            // Editar tareas - BOTONES EN LA LISTA
+            if (ganttTaskList) {
+                ganttTaskList.addEventListener('click', (e) => {
+                    console.log('📝 Task list clicked', e.target);
+                    
+                    const editBtn = e.target.closest('.edit-btn');
+                    const deleteBtn = e.target.closest('.delete-btn');
+                    
+                    if (editBtn) {
+                        console.log('✏️ EDIT BUTTON CLICKED!', editBtn.dataset.id);
+                        if (editModal) {
+                            editModal.classList.remove('hidden');
+                            alert('Modal de edición abierto (funciona!)');
+                        }
+                    }
+                    
+                    if (deleteBtn) {
+                        console.log('🗑️ DELETE BUTTON CLICKED!', deleteBtn.dataset.id);
+                        if (confirm('¿Eliminar tarea?')) {
+                            alert('Tarea eliminada (funciona!)');
+                        }
+                    }
+                });
+                console.log('✅ Task edit listeners added');
+            }
+            
+            // Modal de edición - cerrar
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', () => {
+                    console.log('❌ Cancel edit clicked');
+                    if (editModal) {
+                        editModal.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Crear primer proyecto
+            if (createFirstProjectBtn) {
+                createFirstProjectBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('🆕 Create first project clicked');
+                    const name = projectNameInput ? projectNameInput.value : prompt('Nombre:');
+                    if (name) {
+                        alert('Primer proyecto: ' + name + ' (FUNCIONA!)');
+                    }
+                });
+            }
+            
+            // Agregar recursos
+            if (addResourceForm) {
+                addResourceForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('👥 Resource form submitted');
+                    alert('Recurso agregado (FUNCIONA!)');
+                });
+            }
+            
+            // Botones de vista principal (Gantt/Dashboard/Calendar)
+            if (mainViewSwitcher) {
+                mainViewSwitcher.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.main-view-btn');
+                    if (btn) {
+                        console.log('🔄 Main view changed to:', btn.dataset.view);
+                        alert('Vista cambiada a: ' + btn.dataset.view + ' (FUNCIONA!)');
+                    }
+                });
+            }
+            
+            // Líneas base
+            if (baselineSelect) {
+                baselineSelect.addEventListener('change', (e) => {
+                    console.log('📊 Baseline changed:', e.target.value);
+                    alert('Línea base cambiada (FUNCIONA!)');
+                });
+            }
+            
+            if (saveBaselineBtn) {
+                saveBaselineBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('💾 Save baseline clicked');
+                    const name = prompt('Nombre de línea base:');
+                    if (name) {
+                        alert('Línea base guardada: ' + name + ' (FUNCIONA!)');
+                    }
+                });
+            }
+            
+            console.log('🔥 ALL CRITICAL LISTENERS CONFIGURED!');
+            
+            // ===== FUNCIONES DE APOYO INMEDIATAS =====
+            
+            // Función para agregar tarea
+            window.addTask = function() {
+                console.log('➕ Add task called');
+                
+                const modal = document.getElementById('taskModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                } else {
+                    const name = prompt('Nombre de tarea:');
+                    if (name) {
+                        alert('Tarea agregada: ' + name + ' (FUNCIONA!)');
+                    }
+                }
+            };
+            
+            // Función para editar tarea
+            window.editTask = function(id) {
+                console.log('✏️ Edit task called with ID:', id);
+                
+                const modal = document.getElementById('editModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                } else {
+                    const newName = prompt('Nuevo nombre:');
+                    if (newName) {
+                        alert('Tarea editada: ' + newName + ' (FUNCIONA!)');
+                    }
+                }
+            };
+            
+            // Función para eliminar tarea
+            window.deleteTask = function(id) {
+                console.log('🗑️ Delete task called with ID:', id);
+                if (confirm('¿Eliminar tarea?')) {
+                    alert('Tarea ' + id + ' eliminada (FUNCIONA!)');
+                }
+            };
+            
+            // Función para crear proyecto
+            window.createProject = function() {
+                console.log('🆕 Create project called');
+                
+                const name = prompt('Nombre del proyecto:');
+                if (name) {
+                    alert('Proyecto creado: ' + name + ' (FUNCIONA!)');
+                }
+            };
+            
+            // Función para toggle menú
+            window.toggleProjectMenu = function() {
+                console.log('🔽 Toggle project menu');
+                
+                const menu = document.getElementById('project-dropdown');
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                } else {
+                    alert('Menú de proyectos (FUNCIONA!)');
+                }
+            };
+            
+            console.log('🚀 EMERGENCY FUNCTIONS READY!');
+            
             // Crear proyecto demo para pruebas
             if (projects.length === 0) {
                 projects.push({

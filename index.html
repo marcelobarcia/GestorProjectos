@@ -113,15 +113,38 @@
                     if (editBtn) {
                         e.preventDefault();
                         e.stopPropagation();
-                        const taskId = parseInt(editBtn.dataset.id);
-                        console.log('✏️ EDIT TASK CLICKED', taskId);
+                        const taskId = editBtn.dataset.id;
+                        console.log('✏️ EDIT TASK CLICKED', taskId, 'Type:', typeof taskId);
                         
                         try {
-                            // Obtener proyecto y tarea activos
-                            const activeProject = window.projects?.find(p => p.id === window.activeProjectId);
-                            const task = activeProject?.tasks.find(t => t.id === taskId);
+                            // Obtener proyecto y tarea activos con mejor búsqueda
+                            console.log('🔍 Searching for project and task...');
+                            console.log('Available projects:', window.projects?.length || 0);
+                            console.log('Active project ID:', window.activeProjectId);
                             
-                            if (task && activeProject) {
+                            const activeProject = window.projects?.find(p => p.id === window.activeProjectId);
+                            console.log('Active project found:', !!activeProject);
+                            
+                            if (!activeProject) {
+                                console.log('❌ No active project found');
+                                alert('❌ No hay proyecto activo');
+                                return false;
+                            }
+                            
+                            console.log('Tasks in project:', activeProject.tasks?.length || 0);
+                            
+                            // Buscar tarea por ID (como string y como número)
+                            let task = activeProject.tasks?.find(t => String(t.id) === String(taskId)) || 
+                                      activeProject.tasks?.find(t => t.id == taskId);
+                            
+                            console.log('Task found:', !!task);
+                            
+                            if (!task) {
+                                console.log('❌ Task not found with ID:', taskId);
+                                console.log('Available task IDs:', activeProject.tasks?.map(t => t.id) || []);
+                                alert('❌ No se encontró la tarea ID: ' + taskId);
+                                return false;
+                            }
                                 console.log('� Task found for editing:', task);
                                 
                                 // LLENAR EL MODAL CON LOS DATOS
@@ -214,11 +237,65 @@
                                     console.log('✅ Edit modal opened with task data');
                                 }
                                 
-                                alert('✏️ MODAL CARGADO CON DATOS: ' + task.name);
-                            } else {
-                                console.log('❌ Task or project not found');
-                                alert('❌ No se encontró la tarea o proyecto');
+                            if (!task) {
+                                console.log('❌ Task not found with ID:', taskId);
+                                console.log('Available task IDs:', activeProject.tasks?.map(t => t.id) || []);
+                                alert('❌ No se encontró la tarea ID: ' + taskId);
+                                return false;
                             }
+                            
+                            // LLENAR EL MODAL CON LOS DATOS (reutilizar elementos)
+                            console.log('📝 Filling modal with task data:', task);
+                            
+                            // Llenar campos básicos
+                            const editModalElement = document.getElementById('edit-modal');
+                            if (document.getElementById('edit-task-name')) {
+                                document.getElementById('edit-task-name').value = task.name || '';
+                                console.log('✅ Name filled:', task.name);
+                            }
+                            
+                            if (document.getElementById('edit-task-start')) {
+                                let startDate = task.startDate;
+                                if (startDate && !startDate.includes('-')) {
+                                    const date = new Date(startDate);
+                                    startDate = date.toISOString().split('T')[0];
+                                }
+                                document.getElementById('edit-task-start').value = startDate || '';
+                                console.log('✅ Start date filled:', startDate);
+                            }
+                            
+                            if (document.getElementById('edit-task-duration')) {
+                                document.getElementById('edit-task-duration').value = task.duration || 1;
+                                console.log('✅ Duration filled:', task.duration);
+                            }
+                            
+                            if (document.getElementById('edit-task-type')) {
+                                document.getElementById('edit-task-type').value = task.type || 'task';
+                            }
+                            
+                            if (document.getElementById('edit-task-status')) {
+                                document.getElementById('edit-task-status').value = task.status || 'Pendiente';
+                            }
+                            
+                            if (document.getElementById('edit-task-progress')) {
+                                const progressValue = task.progress || 0;
+                                document.getElementById('edit-task-progress').value = progressValue;
+                                const progressSpan = document.getElementById('edit-progress-value');
+                                if (progressSpan) {
+                                    progressSpan.textContent = progressValue;
+                                }
+                            }
+                            
+                            if (document.getElementById('edit-task-id')) {
+                                document.getElementById('edit-task-id').value = taskId;
+                            }
+                            
+                            if (editModalElement) {
+                                editModalElement.classList.remove('hidden');
+                                console.log('✅ Edit modal opened with task data');
+                            }
+                            
+                            console.log('✅ Modal cargado con datos:', task.name);
                         } catch (error) {
                             console.error('❌ Error editing task:', error);
                             alert('❌ Error al editar tarea: ' + error.message);

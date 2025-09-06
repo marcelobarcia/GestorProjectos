@@ -827,6 +827,75 @@
                         mainViewBtn.classList.add('border-blue-600', 'text-blue-600');
                         mainViewBtn.classList.remove('border-transparent', 'text-slate-500');
                         
+                        // MOSTRAR/OCULTAR LAS VISTAS CORRESPONDIENTES
+                        const ganttView = document.getElementById('gantt-view');
+                        const dashboardView = document.getElementById('dashboard-view');
+                        const calendarView = document.getElementById('calendar-view');
+                        
+                        // Ocultar todas las vistas
+                        if (ganttView) ganttView.classList.add('hidden');
+                        if (dashboardView) dashboardView.classList.add('hidden');
+                        if (calendarView) calendarView.classList.add('hidden');
+                        
+                        // Mostrar la vista seleccionada
+                        switch(newView) {
+                            case 'gantt':
+                                if (ganttView) {
+                                    ganttView.classList.remove('hidden');
+                                    console.log('✅ Gantt view shown');
+                                    
+                                    // Renderizar Gantt si hay función disponible
+                                    if (window.renderGantt && typeof window.renderGantt === 'function') {
+                                        try {
+                                            window.renderGantt();
+                                            console.log('✅ Gantt rendered');
+                                        } catch (error) {
+                                            console.error('❌ Error rendering Gantt:', error);
+                                        }
+                                    }
+                                }
+                                break;
+                                
+                            case 'dashboard':
+                                if (dashboardView) {
+                                    dashboardView.classList.remove('hidden');
+                                    console.log('✅ Dashboard view shown');
+                                    
+                                    // Renderizar Dashboard si hay función disponible
+                                    if (window.renderDashboard && typeof window.renderDashboard === 'function') {
+                                        try {
+                                            window.renderDashboard();
+                                            console.log('✅ Dashboard rendered');
+                                        } catch (error) {
+                                            console.error('❌ Error rendering Dashboard:', error);
+                                        }
+                                    }
+                                }
+                                break;
+                                
+                            case 'calendar':
+                                if (calendarView) {
+                                    calendarView.classList.remove('hidden');
+                                    console.log('✅ Calendar view shown');
+                                    
+                                    // Renderizar Calendar si hay función disponible
+                                    if (window.renderCalendar && typeof window.renderCalendar === 'function') {
+                                        try {
+                                            window.renderCalendar();
+                                            console.log('✅ Calendar rendered');
+                                        } catch (error) {
+                                            console.error('❌ Error rendering Calendar:', error);
+                                        }
+                                    }
+                                }
+                                break;
+                                
+                            default:
+                                console.warn('⚠️ Unknown view:', newView);
+                                // Por defecto mostrar Gantt
+                                if (ganttView) ganttView.classList.remove('hidden');
+                        }
+                        
                         console.log('✅ Vista principal cambiada a:', newView);
                     }
                 });
@@ -1148,6 +1217,202 @@
                 console.log('✅ Edit task form listener added');
             } else {
                 console.warn('⚠️ Edit task form not found');
+            }
+            
+            // ===== EVENT LISTENER PARA AÑADIR FERIADOS =====
+            const addHolidayForm = document.getElementById('add-holiday-form');
+            if (addHolidayForm) {
+                addHolidayForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('📅 Holiday form submitted');
+                    
+                    try {
+                        const holidayDate = document.getElementById('holiday-date')?.value;
+                        const holidayName = document.getElementById('holiday-name')?.value;
+                        
+                        if (!holidayDate || !holidayName) {
+                            alert('❌ Por favor completa todos los campos');
+                            return;
+                        }
+                        
+                        const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                        if (!activeProject) {
+                            alert('❌ No hay proyecto activo');
+                            return;
+                        }
+                        
+                        // Inicializar array de feriados si no existe
+                        if (!activeProject.holidays) {
+                            activeProject.holidays = [];
+                        }
+                        
+                        // Crear nuevo feriado
+                        const newHoliday = {
+                            date: holidayDate,
+                            name: holidayName,
+                            id: Date.now()
+                        };
+                        
+                        // Añadir al proyecto
+                        activeProject.holidays.push(newHoliday);
+                        console.log('✅ Holiday added:', newHoliday);
+                        
+                        // Limpiar formulario
+                        document.getElementById('holiday-date').value = '';
+                        document.getElementById('holiday-name').value = '';
+                        
+                        // Guardar en Firebase
+                        if (window.saveProjects) {
+                            window.saveProjects();
+                        }
+                        
+                        // Re-renderizar calendario
+                        if (window.renderCalendar) {
+                            window.renderCalendar();
+                        }
+                        
+                        alert('✅ Feriado añadido: ' + holidayName);
+                        
+                    } catch (error) {
+                        console.error('❌ Error adding holiday:', error);
+                        alert('❌ Error al añadir feriado: ' + error.message);
+                    }
+                });
+                console.log('✅ Add holiday form listener added');
+            } else {
+                console.warn('⚠️ Add holiday form not found');
+            }
+        };
+        
+        // ===== FUNCIONES DE RENDERIZADO PARA VISTAS =====
+        
+        // Función para renderizar Dashboard/KPIs
+        window.renderDashboard = function() {
+            console.log('📊 Rendering Dashboard...');
+            
+            try {
+                const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                if (!activeProject || !activeProject.tasks) {
+                    console.log('❌ No active project or tasks for dashboard');
+                    return;
+                }
+                
+                const tasks = activeProject.tasks;
+                const totalTasks = tasks.length;
+                
+                // Calcular KPIs
+                const completedTasks = tasks.filter(t => t.status === 'Completada').length;
+                const inProgressTasks = tasks.filter(t => t.status === 'En Progreso').length;
+                const pendingTasks = tasks.filter(t => t.status === 'Pendiente').length;
+                const overdueTasks = tasks.filter(t => {
+                    if (t.status === 'Completada') return false;
+                    const today = new Date();
+                    const endDate = new Date(t.endDate);
+                    return endDate < today;
+                }).length;
+                
+                // Calcular progreso general
+                const totalProgress = tasks.reduce((sum, task) => sum + (task.progress || 0), 0);
+                const avgProgress = totalTasks > 0 ? Math.round(totalProgress / totalTasks) : 0;
+                
+                // Calcular duración y fechas
+                const startDates = tasks.map(t => new Date(t.startDate)).filter(d => !isNaN(d));
+                const endDates = tasks.map(t => new Date(t.endDate)).filter(d => !isNaN(d));
+                
+                const projectStart = startDates.length > 0 ? new Date(Math.min(...startDates)) : new Date();
+                const projectEnd = endDates.length > 0 ? new Date(Math.max(...endDates)) : new Date();
+                const totalDuration = Math.ceil((projectEnd - projectStart) / (1000 * 60 * 60 * 24)) + 1;
+                
+                const today = new Date();
+                const daysRemaining = Math.max(0, Math.ceil((projectEnd - today) / (1000 * 60 * 60 * 24)));
+                
+                // Actualizar elementos del DOM
+                const progressCircle = document.getElementById('kpi-progress-circle');
+                const progressText = document.getElementById('kpi-progress-text');
+                if (progressCircle && progressText) {
+                    const circumference = 100;
+                    const strokeDasharray = `${avgProgress}, ${circumference}`;
+                    progressCircle.style.strokeDasharray = strokeDasharray;
+                    progressText.textContent = avgProgress + '%';
+                }
+                
+                // Actualizar contadores
+                const updateElement = (id, value) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = value;
+                };
+                
+                updateElement('kpi-tasks-completed', completedTasks);
+                updateElement('kpi-tasks-overdue', overdueTasks);
+                updateElement('kpi-tasks-inprogress', inProgressTasks);
+                updateElement('kpi-tasks-pending', pendingTasks);
+                updateElement('kpi-duration', totalDuration);
+                updateElement('kpi-days-remaining', daysRemaining);
+                updateElement('kpi-end-date', projectEnd.toLocaleDateString());
+                
+                console.log('✅ Dashboard rendered successfully');
+                
+            } catch (error) {
+                console.error('❌ Error rendering dashboard:', error);
+            }
+        };
+        
+        // Función para renderizar Calendario
+        window.renderCalendar = function() {
+            console.log('📅 Rendering Calendar...');
+            
+            try {
+                const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                if (!activeProject) {
+                    console.log('❌ No active project for calendar');
+                    return;
+                }
+                
+                // Renderizar lista de feriados
+                const holidayListContainer = document.getElementById('holiday-list-container');
+                if (holidayListContainer && activeProject.holidays) {
+                    holidayListContainer.innerHTML = '';
+                    
+                    activeProject.holidays.forEach((holiday, index) => {
+                        const holidayItem = document.createElement('div');
+                        holidayItem.className = 'flex items-center justify-between p-3 bg-blue-50 rounded-lg';
+                        holidayItem.innerHTML = `
+                            <div>
+                                <div class="font-medium text-slate-900">${holiday.name}</div>
+                                <div class="text-sm text-slate-500">${new Date(holiday.date).toLocaleDateString()}</div>
+                            </div>
+                            <button onclick="removeHoliday(${index})" class="text-red-600 hover:text-red-800">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        `;
+                        holidayListContainer.appendChild(holidayItem);
+                    });
+                }
+                
+                console.log('✅ Calendar rendered successfully');
+                
+            } catch (error) {
+                console.error('❌ Error rendering calendar:', error);
+            }
+        };
+        
+        // Función para remover feriados
+        window.removeHoliday = function(index) {
+            const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+            if (activeProject && activeProject.holidays && activeProject.holidays[index]) {
+                activeProject.holidays.splice(index, 1);
+                
+                // Guardar cambios
+                if (window.saveProjects) {
+                    window.saveProjects();
+                }
+                
+                // Re-renderizar calendario
+                window.renderCalendar();
+                
+                console.log('✅ Holiday removed');
             }
         };
         

@@ -37,6 +37,30 @@ class FirebaseManager {
     }
 
     // Guardar todos los proyectos del usuario actual
+    // Función para limpiar datos y remover valores undefined
+    cleanDataForFirebase(data) {
+        if (data === null || data === undefined) {
+            return null;
+        }
+        
+        if (Array.isArray(data)) {
+            return data.map(item => this.cleanDataForFirebase(item)).filter(item => item !== null);
+        }
+        
+        if (typeof data === 'object') {
+            const cleaned = {};
+            Object.keys(data).forEach(key => {
+                const value = this.cleanDataForFirebase(data[key]);
+                if (value !== null && value !== undefined) {
+                    cleaned[key] = value;
+                }
+            });
+            return cleaned;
+        }
+        
+        return data;
+    }
+
     async saveProjects(projects) {
         try {
             await this.ensureInitialized();
@@ -44,8 +68,13 @@ class FirebaseManager {
             
             const userId = this.getCurrentUserId();
             const projectsRef = doc(this.db, 'userProjects', userId);
+            
+            // Limpiar datos antes de enviar a Firebase
+            const cleanedProjects = this.cleanDataForFirebase(projects);
+            console.log('🧹 Cleaned projects for Firebase:', cleanedProjects);
+            
             await setDoc(projectsRef, {
-                projects: projects,
+                projects: cleanedProjects,
                 lastUpdated: new Date().toISOString(),
                 version: '1.0',
                 userId: userId

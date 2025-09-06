@@ -142,17 +142,46 @@ function renderGanttInfo(project) {
     
     // Fechas del proyecto
     if (project.tasks.length > 0) {
-        const startDate = new Date(Math.min(...project.tasks.map(t => parseDate(t.start))));
-        const endDate = new Date(Math.max(...project.tasks.map(t => parseDate(t.end))));
-        const duration = Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1;
+        // Filtrar tareas que tengan fechas válidas
+        const tasksWithValidDates = project.tasks.filter(t => 
+            (t.start || t.startDate) && (t.end || t.endDate || t.duration)
+        );
         
-        const startDateElement = document.getElementById('gantt-info-start-date');
-        const endDateElement = document.getElementById('gantt-info-end-date');
-        const durationElement = document.getElementById('gantt-info-duration');
-        
-        if (startDateElement) startDateElement.textContent = `Inicio: ${window.formatDate ? window.formatDate(startDate) : startDate}`;
-        if (endDateElement) endDateElement.textContent = `Fin: ${window.formatDate ? window.formatDate(endDate) : endDate}`;
-        if (durationElement) durationElement.textContent = `Duración: ${duration} días`;
+        if (tasksWithValidDates.length > 0) {
+            const startDates = tasksWithValidDates.map(t => {
+                const startStr = t.start || t.startDate;
+                return startStr ? parseDate(startStr) : new Date();
+            }).filter(date => !isNaN(date.getTime()));
+            
+            const endDates = tasksWithValidDates.map(t => {
+                const endStr = t.end || t.endDate;
+                if (endStr) {
+                    return parseDate(endStr);
+                } else if (t.start || t.startDate) {
+                    // Calcular end date basado en start + duration
+                    const start = parseDate(t.start || t.startDate);
+                    const duration = parseInt(t.duration) || 1;
+                    const end = new Date(start);
+                    end.setDate(start.getDate() + duration - 1);
+                    return end;
+                }
+                return new Date();
+            }).filter(date => !isNaN(date.getTime()));
+            
+            if (startDates.length > 0 && endDates.length > 0) {
+                const startDate = new Date(Math.min(...startDates));
+                const endDate = new Date(Math.max(...endDates));
+                const duration = Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1;
+                
+                const startDateElement = document.getElementById('gantt-info-start-date');
+                const endDateElement = document.getElementById('gantt-info-end-date');
+                const durationElement = document.getElementById('gantt-info-duration');
+                
+                if (startDateElement) startDateElement.textContent = `Inicio: ${window.formatDate ? window.formatDate(startDate) : startDate}`;
+                if (endDateElement) endDateElement.textContent = `Fin: ${window.formatDate ? window.formatDate(endDate) : endDate}`;
+                if (durationElement) durationElement.textContent = `Duración: ${duration} días`;
+            }
+        }
     }
 }
 

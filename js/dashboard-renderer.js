@@ -35,14 +35,53 @@ function renderDashboard(project) {
     document.getElementById('kpi-tasks-inprogress').textContent = taskStates.inprogress;
     document.getElementById('kpi-tasks-pending').textContent = taskStates.pending;
 
-    const projectStartDate = new Date(Math.min(...project.tasks.map(t => parseDate(t.start))));
-    const projectEndDate = new Date(Math.max(...project.tasks.map(t => parseDate(t.end))));
-    const duration = Math.ceil((projectEndDate - projectStartDate) / (1000 * 3600 * 24));
-    const daysRemaining = Math.ceil((projectEndDate - new Date()) / (1000 * 3600 * 24));
+    // Calcular fechas del proyecto de forma segura
+    const tasksWithValidDates = project.tasks.filter(t => 
+        (t.start || t.startDate) && (t.end || t.endDate || t.duration)
+    );
     
-    document.getElementById('kpi-duration').textContent = duration;
-    document.getElementById('kpi-days-remaining').textContent = daysRemaining > 0 ? daysRemaining : 0;
-    document.getElementById('kpi-end-date').textContent = projectEndDate.toLocaleDateString();
+    if (tasksWithValidDates.length > 0) {
+        const startDates = tasksWithValidDates.map(t => {
+            const startStr = t.start || t.startDate;
+            return startStr ? parseDate(startStr) : new Date();
+        }).filter(date => !isNaN(date.getTime()));
+        
+        const endDates = tasksWithValidDates.map(t => {
+            const endStr = t.end || t.endDate;
+            if (endStr) {
+                return parseDate(endStr);
+            } else if (t.start || t.startDate) {
+                // Calcular end date basado en start + duration
+                const start = parseDate(t.start || t.startDate);
+                const duration = parseInt(t.duration) || 1;
+                const end = new Date(start);
+                end.setDate(start.getDate() + duration - 1);
+                return end;
+            }
+            return new Date();
+        }).filter(date => !isNaN(date.getTime()));
+        
+        if (startDates.length > 0 && endDates.length > 0) {
+            const projectStartDate = new Date(Math.min(...startDates));
+            const projectEndDate = new Date(Math.max(...endDates));
+            const duration = Math.ceil((projectEndDate - projectStartDate) / (1000 * 3600 * 24));
+            const daysRemaining = Math.ceil((projectEndDate - new Date()) / (1000 * 3600 * 24));
+            
+            document.getElementById('kpi-duration').textContent = duration;
+            document.getElementById('kpi-days-remaining').textContent = daysRemaining > 0 ? daysRemaining : 0;
+            document.getElementById('kpi-end-date').textContent = projectEndDate.toLocaleDateString();
+        } else {
+            // No hay fechas válidas
+            document.getElementById('kpi-duration').textContent = '0';
+            document.getElementById('kpi-days-remaining').textContent = '0';
+            document.getElementById('kpi-end-date').textContent = 'Sin definir';
+        }
+    } else {
+        // No hay tareas con fechas válidas
+        document.getElementById('kpi-duration').textContent = '0';
+        document.getElementById('kpi-days-remaining').textContent = '0';
+        document.getElementById('kpi-end-date').textContent = 'Sin definir';
+    }
 
     const workload = project.resources.map(res => ({
         name: res.name,

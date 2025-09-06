@@ -1,9 +1,15 @@
 // Date & Calculation Helper functions
 const parseDate = (str) => {
-    if (!str) {
+    if (!str || str === '' || str === 'undefined' || str === 'null') {
         console.error('❌ Empty string passed to parseDate');
         return new Date();
     }
+    
+    // Si ya es un objeto Date, retornarlo directamente
+    if (str instanceof Date) {
+        return isNaN(str.getTime()) ? new Date() : str;
+    }
+    
     const date = new Date(str + 'T00:00:00Z');
     if (isNaN(date.getTime())) {
         console.error('❌ Invalid date string passed to parseDate:', str);

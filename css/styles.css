@@ -137,13 +137,21 @@ body {
 #calendar-view.hidden, 
 #gantt-view.hidden,
 #no-project-view.hidden {
-    display: none;
+    display: none !important;
+}
+
+/* Asegurar que solo una vista sea visible a la vez */
+#gantt-view:not(.hidden) ~ #dashboard-view:not(.hidden),
+#gantt-view:not(.hidden) ~ #calendar-view:not(.hidden),
+#dashboard-view:not(.hidden) ~ #calendar-view:not(.hidden) {
+    display: none !important;
 }
 
 /* Consistencia en las vistas principales */
 #gantt-view, #dashboard-view, #calendar-view {
     min-height: 400px;
     width: 100%;
+    position: relative;
 }
 
 #dashboard-view, #calendar-view {

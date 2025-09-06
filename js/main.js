@@ -1,13 +1,27 @@
 // Main application functions
 function render() {
+    console.log('🎨 Rendering app...', {
+        projects: projects.length,
+        activeProjectId,
+        currentView,
+        isAuthenticated: authManager ? authManager.isAuthenticated() : false
+    });
+    
     const project = getActiveProject();
     
+    console.log('📊 Render state:', { 
+        project: project ? project.name : 'none',
+        hasProject: !!project 
+    });
+    
     if (!project) {
+        console.log('👋 No project - showing welcome/no project view');
         mainContent.classList.add('hidden');
         noProjectView.classList.remove('hidden');
         return;
     }
     
+    console.log('✅ Has project - showing main content');
     mainContent.classList.remove('hidden');
     noProjectView.classList.add('hidden');
     
@@ -43,21 +57,33 @@ function debounceAutoSave() {
 
 // Application initialization
 async function initializeApp() {
+    console.log('🚀 Initializing app...');
+    
     // Agregar indicador de estado de Firebase
     addFirebaseStatusIndicator();
+    
+    // Limpiar estado previo
+    console.log('📝 Current projects before loading:', projects.length);
     
     // Intentar cargar proyectos desde Firebase
     const loadedFromFirebase = await loadProjectsFromFirebase();
     
+    console.log('📦 Projects after loading from Firebase:', projects.length);
+    console.log('🔥 Loaded from Firebase:', loadedFromFirebase);
+    
     // Si no se cargaron proyectos desde Firebase, crear proyecto demo
     if (!loadedFromFirebase && projects.length === 0) {
+        console.log('🆕 Creating demo project...');
         await createProject('Proyecto Demo', true);
     }
     
     // Asegurar que hay un proyecto activo
     if (!activeProjectId && projects.length > 0) {
         activeProjectId = projects[0].id;
+        console.log('✅ Set active project:', activeProjectId);
     }
+    
+    console.log('🎯 Final state - Projects:', projects.length, 'Active:', activeProjectId);
     
     setupEventListeners();
     render();

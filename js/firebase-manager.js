@@ -22,20 +22,36 @@ class FirebaseManager {
         }
     }
 
-    // Guardar todos los proyectos
+    // Obtener el ID del usuario actual
+    getCurrentUserId() {
+        if (window.currentUser) {
+            return window.currentUser.uid;
+        }
+        return 'anonymous-' + (localStorage.getItem('anonymousId') || this.generateAnonymousId());
+    }
+
+    generateAnonymousId() {
+        const id = 'anon-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('anonymousId', id);
+        return id;
+    }
+
+    // Guardar todos los proyectos del usuario actual
     async saveProjects(projects) {
         try {
             await this.ensureInitialized();
             const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
             
-            const projectsRef = doc(this.db, 'gestorProyectos', 'allProjects');
+            const userId = this.getCurrentUserId();
+            const projectsRef = doc(this.db, 'userProjects', userId);
             await setDoc(projectsRef, {
                 projects: projects,
                 lastUpdated: new Date().toISOString(),
-                version: '1.0'
+                version: '1.0',
+                userId: userId
             });
             
-            console.log('Projects saved to Firebase successfully');
+            console.log(`Projects saved to Firebase for user: ${userId}`);
             return true;
         } catch (error) {
             console.error('Error saving projects to Firebase:', error);
@@ -43,21 +59,22 @@ class FirebaseManager {
         }
     }
 
-    // Cargar todos los proyectos
+    // Cargar todos los proyectos del usuario actual
     async loadProjects() {
         try {
             await this.ensureInitialized();
             const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
             
-            const projectsRef = doc(this.db, 'gestorProyectos', 'allProjects');
+            const userId = this.getCurrentUserId();
+            const projectsRef = doc(this.db, 'userProjects', userId);
             const docSnap = await getDoc(projectsRef);
             
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                console.log('Projects loaded from Firebase successfully');
+                console.log(`Projects loaded from Firebase for user: ${userId}`);
                 return data.projects || [];
             } else {
-                console.log('No projects found in Firebase');
+                console.log(`No projects found in Firebase for user: ${userId}`);
                 return [];
             }
         } catch (error) {

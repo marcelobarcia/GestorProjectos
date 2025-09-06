@@ -159,7 +159,8 @@ class AuthManager {
 
     handleAuthStateChange(user) {
         if (user) {
-            // Usuario autenticado - mostrar aplicación
+            // Usuario autenticado - limpiar datos previos y cargar del usuario actual
+            this.clearPreviousUserData();
             this.showMainApp();
             
             // Guardar datos del usuario
@@ -171,6 +172,18 @@ class AuthManager {
         }
     }
 
+    clearPreviousUserData() {
+        // Limpiar datos del usuario anterior
+        if (typeof projects !== 'undefined') {
+            projects.length = 0; // Limpiar array de proyectos
+        }
+        if (typeof activeProjectId !== 'undefined') {
+            activeProjectId = null; // Resetear proyecto activo
+        }
+        
+        console.log('Previous user data cleared');
+    }
+
     showMainApp() {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
@@ -178,17 +191,21 @@ class AuthManager {
         // Mostrar información del usuario en el header
         this.updateUserInfo();
         
-        // Inicializar la aplicación principal si existe
-        if (typeof initializeApp === 'function') {
-            initializeApp();
-        } else {
-            // Fallback: buscar otras funciones de inicialización
-            setTimeout(() => {
-                if (typeof initializeApp === 'function') {
-                    initializeApp();
-                }
-            }, 500);
-        }
+        // Forzar reinicialización completa de la aplicación para el nuevo usuario
+        setTimeout(async () => {
+            if (typeof initializeApp === 'function') {
+                console.log('Initializing app for authenticated user...');
+                await initializeApp();
+            } else {
+                // Fallback: buscar otras funciones de inicialización
+                setTimeout(async () => {
+                    if (typeof initializeApp === 'function') {
+                        console.log('Fallback: Initializing app for authenticated user...');
+                        await initializeApp();
+                    }
+                }, 500);
+            }
+        }, 100);
     }
 
     showLoginScreen() {
@@ -245,8 +262,14 @@ class AuthManager {
 
     async logout() {
         try {
+            // Limpiar datos del usuario actual antes de cerrar sesión
+            this.clearPreviousUserData();
+            
             await window.signOut(window.firebaseAuth);
             localStorage.removeItem('userSession');
+            window.currentUser = null;
+            this.currentUser = null;
+            
             this.showSuccess('Sesión cerrada correctamente');
         } catch (error) {
             console.error('Error al cerrar sesión:', error);

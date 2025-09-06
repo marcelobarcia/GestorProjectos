@@ -641,6 +641,12 @@
                                             if (projectMenu) {
                                                 projectMenu.classList.add('hidden');
                                             }
+                                            
+                                            // Sincronizar configuraciones del proyecto
+                                            if (window.syncProjectSettings) {
+                                                window.syncProjectSettings();
+                                            }
+                                            
                                             // Re-renderizar si hay función disponible
                                             if (window.render) {
                                                 window.render();
@@ -847,11 +853,23 @@
                                     // Renderizar Gantt si hay función disponible
                                     if (window.renderGantt && typeof window.renderGantt === 'function') {
                                         try {
-                                            window.renderGantt();
-                                            console.log('✅ Gantt rendered');
+                                            const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                                            window.renderGantt(activeProject);
+                                            console.log('✅ Gantt rendered with project:', activeProject?.name);
                                         } catch (error) {
                                             console.error('❌ Error rendering Gantt:', error);
                                         }
+                                    } else if (window.renderGanttTimeline && window.renderGanttChart) {
+                                        try {
+                                            const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                                            window.renderGanttTimeline(activeProject);
+                                            window.renderGanttChart(activeProject);
+                                            console.log('✅ Gantt timeline and chart rendered');
+                                        } catch (error) {
+                                            console.error('❌ Error rendering Gantt components:', error);
+                                        }
+                                    } else {
+                                        console.warn('⚠️ No Gantt render functions available');
                                     }
                                 }
                                 break;
@@ -1200,11 +1218,26 @@
                             editModal.classList.add('hidden');
                         }
                         
-                        // Re-renderizar si hay función disponible
-                        if (window.render) {
-                            window.render();
-                        } else if (window.renderApp) {
-                            window.renderApp();
+                        // Re-renderizar Gantt específicamente
+                        try {
+                            if (window.renderGantt && typeof window.renderGantt === 'function') {
+                                window.renderGantt(activeProject);
+                                console.log('✅ Gantt re-rendered after task edit');
+                            } else if (window.renderGanttTimeline && window.renderGanttChart) {
+                                window.renderGanttTimeline(activeProject);
+                                window.renderGanttChart(activeProject);
+                                console.log('✅ Gantt components re-rendered after task edit');
+                            } else if (window.render) {
+                                window.render();
+                                console.log('✅ General render called after task edit');
+                            } else if (window.renderApp) {
+                                window.renderApp();
+                                console.log('✅ App render called after task edit');
+                            } else {
+                                console.warn('⚠️ No render function available after task edit');
+                            }
+                        } catch (renderError) {
+                            console.error('❌ Error re-rendering after task edit:', renderError);
                         }
                         
                         alert('✅ Tarea actualizada: ' + taskName);
@@ -1281,6 +1314,94 @@
                 console.log('✅ Add holiday form listener added');
             } else {
                 console.warn('⚠️ Add holiday form not found');
+            }
+            
+            // ===== EVENT LISTENERS PARA CONFIGURACIÓN GANTT =====
+            
+            // Checkbox para incluir fines de semana
+            const workWeekendsToggle = document.getElementById('work-weekends-toggle');
+            if (workWeekendsToggle) {
+                workWeekendsToggle.addEventListener('change', function() {
+                    const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                    if (activeProject) {
+                        activeProject.workWeekends = this.checked;
+                        console.log('🏖️ Work weekends:', this.checked);
+                        
+                        // Guardar en Firebase
+                        if (window.saveProjects) {
+                            window.saveProjects();
+                        }
+                        
+                        // Re-renderizar Gantt
+                        if (window.renderGantt && typeof window.renderGantt === 'function') {
+                            try {
+                                window.renderGantt(activeProject);
+                                console.log('✅ Gantt re-rendered after weekends toggle');
+                            } catch (error) {
+                                console.error('❌ Error re-rendering Gantt:', error);
+                            }
+                        }
+                    }
+                });
+                console.log('✅ Work weekends toggle listener added');
+            }
+            
+            // Checkbox para ruta crítica
+            const criticalPathToggle = document.getElementById('critical-path-toggle');
+            if (criticalPathToggle) {
+                criticalPathToggle.addEventListener('change', function() {
+                    const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                    if (activeProject) {
+                        activeProject.showCriticalPath = this.checked;
+                        console.log('🎯 Show critical path:', this.checked);
+                        
+                        // Guardar en Firebase
+                        if (window.saveProjects) {
+                            window.saveProjects();
+                        }
+                        
+                        // Re-renderizar Gantt
+                        if (window.renderGantt && typeof window.renderGantt === 'function') {
+                            try {
+                                window.renderGantt(activeProject);
+                                console.log('✅ Gantt re-rendered after critical path toggle');
+                            } catch (error) {
+                                console.error('❌ Error re-rendering Gantt:', error);
+                            }
+                        }
+                    }
+                });
+                console.log('✅ Critical path toggle listener added');
+            }
+        };
+        
+        // ===== FUNCIÓN PARA SINCRONIZAR CONFIGURACIÓN UI =====
+        
+        window.syncProjectSettings = function() {
+            const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+            if (!activeProject) return;
+            
+            console.log('🔄 Syncing project settings for:', activeProject.name);
+            
+            // Sincronizar checkbox de fines de semana
+            const workWeekendsToggle = document.getElementById('work-weekends-toggle');
+            if (workWeekendsToggle) {
+                workWeekendsToggle.checked = activeProject.workWeekends || false;
+                console.log('✅ Work weekends synced:', activeProject.workWeekends);
+            }
+            
+            // Sincronizar checkbox de ruta crítica
+            const criticalPathToggle = document.getElementById('critical-path-toggle');
+            if (criticalPathToggle) {
+                criticalPathToggle.checked = activeProject.showCriticalPath || false;
+                console.log('✅ Critical path synced:', activeProject.showCriticalPath);
+            }
+            
+            // Actualizar nombre del proyecto en el input
+            const projectNameInput = document.getElementById('project-name-input');
+            if (projectNameInput) {
+                projectNameInput.value = String(activeProject.name || '');
+                console.log('✅ Project name synced:', activeProject.name);
             }
         };
         

@@ -138,27 +138,40 @@ body {
 #gantt-view.hidden,
 #no-project-view.hidden {
     display: none !important;
+    visibility: hidden !important;
 }
 
 /* Asegurar que solo una vista sea visible a la vez */
-#gantt-view:not(.hidden) ~ #dashboard-view:not(.hidden),
-#gantt-view:not(.hidden) ~ #calendar-view:not(.hidden),
-#dashboard-view:not(.hidden) ~ #calendar-view:not(.hidden) {
-    display: none !important;
+#main-content {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
 }
 
 /* Consistencia en las vistas principales */
 #gantt-view, #dashboard-view, #calendar-view {
-    min-height: 400px;
-    width: 100%;
     position: relative;
+    width: 100% !important;
+    min-height: 90vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+    z-index: 1;
 }
 
-#dashboard-view, #calendar-view {
-    background-color: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+#gantt-view:not(.hidden), 
+#dashboard-view:not(.hidden), 
+#calendar-view:not(.hidden) {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Contenido interno de las vistas */
+#gantt-view > *, 
+#dashboard-view > *, 
+#calendar-view > * {
+    position: relative;
+    z-index: 2;
 }
 
 /* Botones de vista */

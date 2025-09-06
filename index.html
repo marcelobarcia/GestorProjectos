@@ -85,19 +85,20 @@
             </div>
         </header>
 
-        <div id="main-content" class="space-y-6">
+        <div id="main-content" class="min-h-screen">
             
             <!-- Área Principal de Vistas -->
-            <div>
-                 <div class="mb-4">
-                     <div id="main-view-switcher" class="flex items-center border-b border-slate-200 bg-white rounded-t-lg px-4">
-                        <button data-view="gantt" class="main-view-btn font-semibold py-2 px-4 border-b-2 border-blue-600 text-blue-600">Gantt</button>
-                        <button data-view="dashboard" class="main-view-btn font-semibold py-2 px-4 border-b-2 border-transparent text-slate-500">Dashboard</button>
-                        <button data-view="calendar" class="main-view-btn font-semibold py-2 px-4 border-b-2 border-transparent text-slate-500">Calendario</button>
+            <div class="w-full">
+                 <div class="mb-0">
+                     <div id="main-view-switcher" class="flex items-center border-b border-slate-200 bg-white rounded-t-lg px-6">
+                        <button data-view="gantt" class="main-view-btn font-semibold py-3 px-6 border-b-2 border-blue-600 text-blue-600">Gantt</button>
+                        <button data-view="dashboard" class="main-view-btn font-semibold py-3 px-6 border-b-2 border-transparent text-slate-500">Dashboard</button>
+                        <button data-view="calendar" class="main-view-btn font-semibold py-3 px-6 border-b-2 border-transparent text-slate-500">Calendario</button>
                     </div>
                  </div>
 
-                <main id="gantt-view" class="bg-white rounded-lg shadow-md overflow-hidden">
+                <!-- Vista Gantt -->
+                <main id="gantt-view" class="bg-white shadow-md w-full min-h-[90vh]">
                     <!-- Panel de Configuración y Controles -->
                     <div class="bg-slate-50 border-b border-slate-200 px-6 py-4">
                         <!-- Configuración -->
@@ -305,8 +306,10 @@
                         </div>
                     </div>
                 </main>
+                <!-- FIN VISTA GANTT -->
                 
-                <main id="dashboard-view" class="hidden bg-white rounded-lg shadow-md overflow-hidden">
+                <!-- Vista Dashboard -->
+                <main id="dashboard-view" class="hidden bg-white shadow-md w-full min-h-[90vh]">
                     <div class="p-6">
                         <h2 class="text-2xl font-bold text-slate-900 mb-6">Dashboard del Proyecto</h2>
                         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -337,8 +340,10 @@
                         </div>
                     </div>
                 </main>
+                <!-- FIN VISTA DASHBOARD -->
                 
-                <main id="calendar-view" class="hidden bg-white rounded-lg shadow-md overflow-hidden">
+                <!-- Vista Calendario -->
+                <main id="calendar-view" class="hidden bg-white shadow-md w-full min-h-[90vh]">
                     <div class="p-6">
                         <h2 class="text-2xl font-bold text-slate-900 mb-6">Calendario y Feriados</h2>
                         <form id="add-holiday-form" class="flex gap-2 mb-6 p-4 bg-slate-50 rounded-lg">
@@ -349,6 +354,7 @@
                         <div id="holiday-list-container" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
                 </main>
+                <!-- FIN VISTA CALENDARIO -->
             </div>
         </div>
 

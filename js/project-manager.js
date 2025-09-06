@@ -108,6 +108,7 @@ async function loadProjectsFromFirebase() {
         const loadedProjects = await firebaseManager.loadProjects();
         
         if (loadedProjects && loadedProjects.length > 0) {
+            console.log('📦 Loaded projects from Firebase:', loadedProjects.length);
             projects = loadedProjects;
             if (!activeProjectId && projects.length > 0) {
                 activeProjectId = projects[0].id;
@@ -116,10 +117,17 @@ async function loadProjectsFromFirebase() {
             showNotification('Proyectos cargados desde Firebase', 'success');
             return true;
         } else {
-            // Si no hay proyectos en Firebase, crear proyecto demo
-            console.log('No projects in Firebase, creating demo project');
+            // Si no hay proyectos en Firebase para este usuario, crear proyecto demo
+            console.log('🆕 No projects in Firebase for this user, creating demo project');
+            projects = []; // Limpiar proyectos existentes
+            activeProjectId = null;
+            
+            // Crear proyecto demo automáticamente para usuarios nuevos
+            const demoProject = await createProject('Proyecto Demo', true);
+            
             updateConnectionStatus(true);
-            return false;
+            showNotification('Proyecto demo creado para nuevo usuario', 'success');
+            return true;
         }
     } catch (error) {
         console.error('Error loading from Firebase:', error);

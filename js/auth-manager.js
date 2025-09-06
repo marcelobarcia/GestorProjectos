@@ -173,15 +173,23 @@ class AuthManager {
     }
 
     clearPreviousUserData() {
+        console.log('🧹 Clearing previous user data...');
+        
         // Limpiar datos del usuario anterior
         if (typeof projects !== 'undefined') {
+            console.log('Clearing projects array, previous count:', projects.length);
             projects.length = 0; // Limpiar array de proyectos
         }
         if (typeof activeProjectId !== 'undefined') {
+            console.log('Clearing active project ID, previous value:', activeProjectId);
             activeProjectId = null; // Resetear proyecto activo
         }
         
-        console.log('Previous user data cleared');
+        // Limpiar almacenamiento local
+        localStorage.removeItem('projects');
+        localStorage.removeItem('activeProjectId');
+        
+        console.log('✅ Previous user data cleared completely');
     }
 
     showMainApp() {

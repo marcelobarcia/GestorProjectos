@@ -96,5 +96,15 @@ window.addEventListener('offline', () => {
     showNotification('Sin conexión a internet. Los datos se guardarán localmente.', 'warning');
 });
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initializeApp);
+// Initialize when DOM is ready - solo si no hay sistema de autenticación
+// Si hay auth-manager, este se encargará de llamar initializeApp
+document.addEventListener('DOMContentLoaded', () => {
+    // Solo inicializar automáticamente si no hay auth-manager
+    if (!window.authManager) {
+        setTimeout(() => {
+            if (!window.authManager) {
+                initializeApp();
+            }
+        }, 1000);
+    }
+});

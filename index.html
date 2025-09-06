@@ -50,16 +50,54 @@
                     
                     console.log('Task data:', { taskName, taskStart, taskDuration, taskType, taskResource });
                     
+                    // Validar datos básicos
+                    if (!taskName || !taskStart || !taskDuration) {
+                        alert('❌ Complete todos los campos obligatorios');
+                        return false;
+                    }
+                    
+                    // Validar fecha de inicio
+                    const startDate = new Date(taskStart);
+                    if (isNaN(startDate.getTime())) {
+                        alert('❌ Fecha de inicio inválida. Use formato YYYY-MM-DD');
+                        return false;
+                    }
+                    
+                    // Validar duración
+                    const duration = parseInt(taskDuration);
+                    if (isNaN(duration) || duration <= 0) {
+                        alert('❌ La duración debe ser un número mayor a 0');
+                        return false;
+                    }
+                    
+                    console.log('✅ Validation passed:', { 
+                        taskName, 
+                        taskStart, 
+                        startDateISO: startDate.toISOString().split('T')[0], 
+                        duration 
+                    });
+                    
                     if (taskName && taskStart && taskDuration) {
                         // LLAMAR A FUNCIONES REALES DIRECTAMENTE
                         try {
                             // Crear tarea directamente en el proyecto activo
                             const activeProject = window.projects?.find(p => p.id === window.activeProjectId);
                             if (activeProject) {
+                                // Crear fecha válida para startDate
+                                const validStartDate = new Date(taskStart);
+                                const formattedStartDate = validStartDate.toISOString().split('T')[0];
+                                
+                                console.log('🔍 Creating task with validated date:', {
+                                    original: taskStart,
+                                    parsed: validStartDate,
+                                    formatted: formattedStartDate
+                                });
+                                
                                 const newTask = {
                                     id: Date.now(),
                                     name: taskName,
-                                    startDate: taskStart,
+                                    startDate: formattedStartDate, // Usar fecha formateada y validada
+                                    start: formattedStartDate, // También para compatibilidad
                                     duration: parseInt(taskDuration),
                                     type: taskType,
                                     resource: taskResource,

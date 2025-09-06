@@ -1,6 +1,25 @@
 // Date & Calculation Helper functions
-const parseDate = (str) => new Date(str + 'T00:00:00Z');
-const formatDate = (date) => date.toISOString().split('T')[0];
+const parseDate = (str) => {
+    if (!str) {
+        console.error('❌ Empty string passed to parseDate');
+        return new Date();
+    }
+    const date = new Date(str + 'T00:00:00Z');
+    if (isNaN(date.getTime())) {
+        console.error('❌ Invalid date string passed to parseDate:', str);
+        return new Date();
+    }
+    return date;
+};
+
+const formatDate = (date) => {
+    // Validar que la fecha sea válida antes de llamar toISOString
+    if (!date || isNaN(date.getTime())) {
+        console.error('❌ Invalid date passed to formatDate:', date);
+        return new Date().toISOString().split('T')[0]; // Retornar fecha actual como fallback
+    }
+    return date.toISOString().split('T')[0];
+};
 
 function isWorkingDay(date, project) {
     const day = date.getUTCDay();

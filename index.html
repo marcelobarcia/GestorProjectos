@@ -407,6 +407,98 @@
                 }
             });
             
+            // ===== BOTONES DE VISTA GANTT =====
+            
+            // Event listener para botones de vista Gantt (Día, Semana, Mes, Año)
+            const ganttViewSwitcher = document.getElementById('gantt-view-switcher');
+            if (ganttViewSwitcher) {
+                ganttViewSwitcher.addEventListener('click', function(e) {
+                    const viewBtn = e.target.closest('.view-btn');
+                    if (viewBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const newView = viewBtn.dataset.view;
+                        console.log('📊 GANTT VIEW CHANGED TO:', newView);
+                        
+                        // Actualizar clases activas
+                        const allViewBtns = ganttViewSwitcher.querySelectorAll('.view-btn');
+                        allViewBtns.forEach(btn => {
+                            btn.classList.remove('active', 'bg-white', 'text-slate-800');
+                            btn.classList.add('text-slate-500');
+                        });
+                        
+                        viewBtn.classList.add('active', 'bg-white', 'text-slate-800');
+                        viewBtn.classList.remove('text-slate-500');
+                        
+                        // Actualizar la vista en el proyecto activo
+                        try {
+                            const activeProject = window.projects?.find(p => p.id === window.activeProjectId);
+                            if (activeProject) {
+                                activeProject.currentGanttView = newView;
+                                console.log('✅ Project view updated to:', newView);
+                                
+                                // Guardar en Firebase
+                                if (window.saveProjects) {
+                                    window.saveProjects();
+                                }
+                                
+                                // Actualizar la interfaz Gantt
+                                if (window.renderGanttChart) {
+                                    window.renderGanttChart();
+                                } else if (window.updateGanttChart) {
+                                    window.updateGanttChart();
+                                } else if (window.renderApp) {
+                                    window.renderApp();
+                                }
+                                
+                                alert('📊 VISTA CAMBIADA A: ' + newView.toUpperCase());
+                            } else {
+                                alert('❌ No hay proyecto activo');
+                            }
+                        } catch (error) {
+                            console.error('❌ Error changing view:', error);
+                            alert('❌ Error al cambiar vista: ' + error.message);
+                        }
+                    }
+                });
+                console.log('✅ Gantt view switcher configured');
+            } else {
+                console.log('❌ gantt-view-switcher not found');
+            }
+            
+            // ===== BOTONES DE VISTA PRINCIPAL =====
+            
+            // Event listener para botones principales (Gantt, Dashboard, Calendario)
+            const mainViewSwitcher = document.getElementById('main-view-switcher');
+            if (mainViewSwitcher) {
+                mainViewSwitcher.addEventListener('click', function(e) {
+                    const mainViewBtn = e.target.closest('.main-view-btn');
+                    if (mainViewBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const newView = mainViewBtn.dataset.view;
+                        console.log('🔄 MAIN VIEW CHANGED TO:', newView);
+                        
+                        // Actualizar clases activas
+                        const allMainBtns = mainViewSwitcher.querySelectorAll('.main-view-btn');
+                        allMainBtns.forEach(btn => {
+                            btn.classList.remove('border-blue-600', 'text-blue-600');
+                            btn.classList.add('border-transparent', 'text-slate-500');
+                        });
+                        
+                        mainViewBtn.classList.add('border-blue-600', 'text-blue-600');
+                        mainViewBtn.classList.remove('border-transparent', 'text-slate-500');
+                        
+                        alert('🔄 VISTA PRINCIPAL CAMBIADA A: ' + newView.toUpperCase());
+                    }
+                });
+                console.log('✅ Main view switcher configured');
+            } else {
+                console.log('❌ main-view-switcher not found');
+            }
+            
             // ===== CERRAR MODALES DE INFORMACIÓN =====
             
             // Event listener para botones "Aceptar" de modales

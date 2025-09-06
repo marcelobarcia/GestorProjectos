@@ -1373,6 +1373,182 @@
                 });
                 console.log('✅ Critical path toggle listener added');
             }
+            
+            // ===== EVENT LISTENERS PARA RECURSOS =====
+            
+            // Formulario para añadir recursos
+            const addResourceForm = document.getElementById('add-resource-form');
+            if (addResourceForm) {
+                addResourceForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('👤 Resource form submitted');
+                    
+                    try {
+                        const resourceName = document.getElementById('resource-name')?.value;
+                        const resourceRole = document.getElementById('resource-role')?.value;
+                        
+                        if (!resourceName || !resourceRole) {
+                            alert('❌ Por favor completa todos los campos del recurso');
+                            return;
+                        }
+                        
+                        const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                        if (!activeProject) {
+                            alert('❌ No hay proyecto activo');
+                            return;
+                        }
+                        
+                        // Inicializar array de recursos si no existe
+                        if (!activeProject.resources) {
+                            activeProject.resources = [];
+                        }
+                        
+                        // Crear nuevo recurso
+                        const newResource = {
+                            id: Date.now(),
+                            name: resourceName,
+                            role: resourceRole,
+                            capacity: 100, // Porcentaje de disponibilidad
+                            cost: 0,
+                            createdAt: new Date().toISOString()
+                        };
+                        
+                        // Añadir al proyecto
+                        activeProject.resources.push(newResource);
+                        console.log('✅ Resource added:', newResource);
+                        
+                        // Limpiar formulario
+                        document.getElementById('resource-name').value = '';
+                        document.getElementById('resource-role').value = '';
+                        
+                        // Guardar en Firebase
+                        if (window.saveProjects) {
+                            window.saveProjects();
+                        }
+                        
+                        // Actualizar lista de recursos
+                        if (window.updateResourceList) {
+                            window.updateResourceList();
+                        }
+                        
+                        // Re-renderizar Gantt para actualizar dropdowns
+                        if (window.renderGantt && typeof window.renderGantt === 'function') {
+                            try {
+                                window.renderGantt(activeProject);
+                                console.log('✅ Gantt re-rendered after adding resource');
+                            } catch (error) {
+                                console.error('❌ Error re-rendering Gantt:', error);
+                            }
+                        }
+                        
+                        alert('✅ Recurso añadido: ' + resourceName);
+                        
+                    } catch (error) {
+                        console.error('❌ Error adding resource:', error);
+                        alert('❌ Error al añadir recurso: ' + error.message);
+                    }
+                });
+                console.log('✅ Add resource form listener added');
+            }
+            
+            // ===== EVENT LISTENERS PARA LÍNEAS BASE =====
+            
+            // Botón para guardar línea base
+            const saveBaselineBtn = document.getElementById('save-baseline-btn');
+            if (saveBaselineBtn) {
+                saveBaselineBtn.addEventListener('click', function() {
+                    console.log('💾 Save baseline clicked');
+                    
+                    try {
+                        const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                        if (!activeProject || !activeProject.tasks || activeProject.tasks.length === 0) {
+                            alert('❌ No hay proyecto activo o tareas para guardar como línea base');
+                            return;
+                        }
+                        
+                        const baselineName = prompt('Nombre para la línea base:', 'Línea Base ' + new Date().toLocaleDateString());
+                        if (!baselineName) {
+                            console.log('ℹ️ Baseline creation cancelled');
+                            return;
+                        }
+                        
+                        // Inicializar array de líneas base si no existe
+                        if (!activeProject.baselines) {
+                            activeProject.baselines = [];
+                        }
+                        
+                        // Crear nueva línea base con snapshot de las tareas actuales
+                        const newBaseline = {
+                            id: Date.now(),
+                            name: baselineName,
+                            tasks: JSON.parse(JSON.stringify(activeProject.tasks)), // Deep copy
+                            createdAt: new Date().toISOString(),
+                            projectName: activeProject.name
+                        };
+                        
+                        // Añadir al proyecto
+                        activeProject.baselines.push(newBaseline);
+                        console.log('✅ Baseline saved:', newBaseline);
+                        
+                        // Guardar en Firebase
+                        if (window.saveProjects) {
+                            window.saveProjects();
+                        }
+                        
+                        // Actualizar lista de líneas base
+                        if (window.updateBaselineList) {
+                            window.updateBaselineList();
+                        }
+                        
+                        alert('✅ Línea base guardada: ' + baselineName);
+                        
+                    } catch (error) {
+                        console.error('❌ Error saving baseline:', error);
+                        alert('❌ Error al guardar línea base: ' + error.message);
+                    }
+                });
+                console.log('✅ Save baseline button listener added');
+            }
+            
+            // Selector de línea base
+            const baselineSelect = document.getElementById('baseline-select');
+            if (baselineSelect) {
+                baselineSelect.addEventListener('change', function() {
+                    const selectedBaselineId = this.value;
+                    console.log('🔄 Baseline selected:', selectedBaselineId);
+                    
+                    try {
+                        const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                        if (!activeProject) {
+                            console.log('❌ No active project for baseline change');
+                            return;
+                        }
+                        
+                        // Actualizar el proyecto con la línea base seleccionada
+                        activeProject.selectedBaselineId = selectedBaselineId === '' ? null : parseInt(selectedBaselineId);
+                        console.log('✅ Selected baseline ID updated:', activeProject.selectedBaselineId);
+                        
+                        // Guardar en Firebase
+                        if (window.saveProjects) {
+                            window.saveProjects();
+                        }
+                        
+                        // Re-renderizar Gantt para mostrar la línea base
+                        if (window.renderGantt && typeof window.renderGantt === 'function') {
+                            try {
+                                window.renderGantt(activeProject);
+                                console.log('✅ Gantt re-rendered with baseline');
+                            } catch (error) {
+                                console.error('❌ Error re-rendering Gantt with baseline:', error);
+                            }
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ Error changing baseline:', error);
+                    }
+                });
+                console.log('✅ Baseline select listener added');
+            }
         };
         
         // ===== FUNCIÓN PARA SINCRONIZAR CONFIGURACIÓN UI =====
@@ -1402,6 +1578,18 @@
             if (projectNameInput) {
                 projectNameInput.value = String(activeProject.name || '');
                 console.log('✅ Project name synced:', activeProject.name);
+            }
+            
+            // Actualizar lista de recursos
+            if (window.updateResourceList) {
+                window.updateResourceList();
+                console.log('✅ Resource list synced');
+            }
+            
+            // Actualizar lista de líneas base
+            if (window.updateBaselineList) {
+                window.updateBaselineList();
+                console.log('✅ Baseline list synced');
             }
         };
         
@@ -1534,6 +1722,161 @@
                 window.renderCalendar();
                 
                 console.log('✅ Holiday removed');
+            }
+        };
+        
+        // ===== FUNCIONES PARA RECURSOS =====
+        
+        window.updateResourceList = function() {
+            console.log('👥 Updating resource list...');
+            
+            try {
+                const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                const resourceListContainer = document.getElementById('resource-list-container');
+                
+                if (!resourceListContainer) return;
+                
+                resourceListContainer.innerHTML = '';
+                
+                if (activeProject && activeProject.resources) {
+                    activeProject.resources.forEach((resource, index) => {
+                        const resourceItem = document.createElement('div');
+                        resourceItem.className = 'flex items-center justify-between p-3 bg-blue-50 rounded-lg';
+                        resourceItem.innerHTML = `
+                            <div>
+                                <div class="font-medium text-slate-900">${resource.name}</div>
+                                <div class="text-sm text-slate-500">${resource.role}</div>
+                            </div>
+                            <button onclick="removeResource(${index})" class="text-red-600 hover:text-red-800">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        `;
+                        resourceListContainer.appendChild(resourceItem);
+                    });
+                }
+                
+                console.log('✅ Resource list updated');
+                
+            } catch (error) {
+                console.error('❌ Error updating resource list:', error);
+            }
+        };
+        
+        window.removeResource = function(index) {
+            const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+            if (activeProject && activeProject.resources && activeProject.resources[index]) {
+                const removedResource = activeProject.resources.splice(index, 1)[0];
+                
+                // Guardar cambios
+                if (window.saveProjects) {
+                    window.saveProjects();
+                }
+                
+                // Actualizar lista
+                window.updateResourceList();
+                
+                // Re-renderizar Gantt
+                if (window.renderGantt && typeof window.renderGantt === 'function') {
+                    try {
+                        window.renderGantt(activeProject);
+                        console.log('✅ Gantt re-rendered after removing resource');
+                    } catch (error) {
+                        console.error('❌ Error re-rendering Gantt:', error);
+                    }
+                }
+                
+                console.log('✅ Resource removed:', removedResource.name);
+            }
+        };
+        
+        // ===== FUNCIONES PARA LÍNEAS BASE =====
+        
+        window.updateBaselineList = function() {
+            console.log('📊 Updating baseline list...');
+            
+            try {
+                const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                const baselineSelect = document.getElementById('baseline-select');
+                const baselineListContainer = document.getElementById('baseline-list-container');
+                
+                if (!baselineSelect || !baselineListContainer) return;
+                
+                // Limpiar selector
+                baselineSelect.innerHTML = '<option value="">Sin línea base</option>';
+                
+                // Limpiar contenedor de lista
+                baselineListContainer.innerHTML = '';
+                
+                if (activeProject && activeProject.baselines) {
+                    // Llenar selector
+                    activeProject.baselines.forEach(baseline => {
+                        const option = document.createElement('option');
+                        option.value = baseline.id;
+                        option.textContent = baseline.name;
+                        if (activeProject.selectedBaselineId === baseline.id) {
+                            option.selected = true;
+                        }
+                        baselineSelect.appendChild(option);
+                    });
+                    
+                    // Llenar lista visual
+                    activeProject.baselines.forEach((baseline, index) => {
+                        const baselineItem = document.createElement('div');
+                        baselineItem.className = 'flex items-center justify-between p-3 bg-green-50 rounded-lg';
+                        baselineItem.innerHTML = `
+                            <div>
+                                <div class="font-medium text-slate-900">${baseline.name}</div>
+                                <div class="text-sm text-slate-500">${new Date(baseline.createdAt).toLocaleDateString()}</div>
+                                <div class="text-xs text-slate-400">${baseline.tasks?.length || 0} tareas</div>
+                            </div>
+                            <button onclick="removeBaseline(${index})" class="text-red-600 hover:text-red-800">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        `;
+                        baselineListContainer.appendChild(baselineItem);
+                    });
+                }
+                
+                console.log('✅ Baseline list updated');
+                
+            } catch (error) {
+                console.error('❌ Error updating baseline list:', error);
+            }
+        };
+        
+        window.removeBaseline = function(index) {
+            const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+            if (activeProject && activeProject.baselines && activeProject.baselines[index]) {
+                const removedBaseline = activeProject.baselines.splice(index, 1)[0];
+                
+                // Si se eliminó la línea base seleccionada, limpiar selección
+                if (activeProject.selectedBaselineId === removedBaseline.id) {
+                    activeProject.selectedBaselineId = null;
+                }
+                
+                // Guardar cambios
+                if (window.saveProjects) {
+                    window.saveProjects();
+                }
+                
+                // Actualizar lista
+                window.updateBaselineList();
+                
+                // Re-renderizar Gantt
+                if (window.renderGantt && typeof window.renderGantt === 'function') {
+                    try {
+                        window.renderGantt(activeProject);
+                        console.log('✅ Gantt re-rendered after removing baseline');
+                    } catch (error) {
+                        console.error('❌ Error re-rendering Gantt:', error);
+                    }
+                }
+                
+                console.log('✅ Baseline removed:', removedBaseline.name);
             }
         };
         

@@ -38,7 +38,7 @@ function renderTaskList(project) {
         const duration = Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1;
 
         el.innerHTML = `
-            <div class="p-3 grid grid-cols-4 gap-2 w-full">
+            <div class="p-3 grid grid-cols-6 gap-2 w-full">
                 <!-- Columna 1: Nombre de tarea (2 columnas) -->
                 <div class="col-span-2">
                     <div class="flex items-center gap-2">
@@ -46,8 +46,7 @@ function renderTaskList(project) {
                         <div class="flex-grow min-w-0">
                             <p class="truncate font-medium">${task.name}</p>
                             <p class="text-xs text-slate-500 truncate">
-                                ${resource ? resource.name : (task.type === 'task' ? 'Sin asignar' : '')} 
-                                ${task.type === 'task' ? `(${task.progress}%)` : ''}
+                                ${task.type === 'task' ? `${task.progress}%` : task.type === 'phase' ? 'Fase' : ''}
                             </p>
                         </div>
                     </div>
@@ -56,12 +55,21 @@ function renderTaskList(project) {
                 <!-- Columna 2: Fecha de Inicio -->
                 <div class="text-center flex flex-col justify-center">
                     <span class="text-xs font-medium">${formatDate(startDate)}</span>
-                    <span class="text-xs text-slate-500">${duration} día${duration !== 1 ? 's' : ''}</span>
                 </div>
                 
                 <!-- Columna 3: Fecha de Fin -->
                 <div class="text-center flex flex-col justify-center">
                     <span class="text-xs font-medium">${formatDate(endDate)}</span>
+                </div>
+                
+                <!-- Columna 4: Duración -->
+                <div class="text-center flex flex-col justify-center">
+                    <span class="text-xs font-medium">${duration} día${duration !== 1 ? 's' : ''}</span>
+                </div>
+                
+                <!-- Columna 5: Asignado -->
+                <div class="text-center flex flex-col justify-center">
+                    <span class="text-xs font-medium">${resource ? resource.name : (task.type === 'task' ? 'Sin asignar' : '-')}</span>
                     <div class="flex items-center justify-center gap-1 mt-1">
                         <button data-id="${task.id}" class="edit-btn text-slate-400 hover:text-blue-500 p-1 rounded-full">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

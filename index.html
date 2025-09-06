@@ -443,8 +443,11 @@
                                 tasks: [],
                                 resources: [],
                                 baselines: [],
+                                holidays: [],
                                 selectedBaselineId: null,
                                 currentGanttView: 'day',
+                                workWeekends: false,
+                                showCriticalPath: false,
                                 createdAt: new Date().toISOString()
                             };
                             
@@ -687,6 +690,84 @@
                     });
                 }
             });
+            
+            // ===== ELIMINAR PROYECTO =====
+            
+            // Event listener para botón eliminar proyecto
+            const deleteProjectBtn = document.getElementById('delete-project-btn');
+            if (deleteProjectBtn) {
+                deleteProjectBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🗑️ DELETE PROJECT BUTTON CLICKED');
+                    
+                    if (!window.activeProjectId || !window.projects) {
+                        alert('❌ No hay proyecto activo para eliminar');
+                        return;
+                    }
+                    
+                    // Encontrar el proyecto activo
+                    const activeProject = window.projects.find(p => p.id === window.activeProjectId);
+                    if (!activeProject) {
+                        alert('❌ No se encontró el proyecto activo');
+                        return;
+                    }
+                    
+                    // Confirmar eliminación
+                    const confirmDelete = confirm(`⚠️ ¿Estás seguro de que quieres eliminar el proyecto "${activeProject.name}"?\n\nEsta acción no se puede deshacer.`);
+                    
+                    if (confirmDelete) {
+                        try {
+                            // Eliminar el proyecto del array
+                            const projectIndex = window.projects.findIndex(p => p.id === window.activeProjectId);
+                            if (projectIndex !== -1) {
+                                const deletedProject = window.projects.splice(projectIndex, 1)[0];
+                                console.log('✅ Project deleted:', deletedProject.name);
+                                
+                                // Si quedan proyectos, seleccionar el primero
+                                if (window.projects.length > 0) {
+                                    window.activeProjectId = window.projects[0].id;
+                                    console.log('✅ Switched to project:', window.projects[0].name);
+                                } else {
+                                    // No quedan proyectos
+                                    window.activeProjectId = null;
+                                    console.log('ℹ️ No projects remaining');
+                                }
+                                
+                                // Guardar cambios en Firebase
+                                if (window.saveProjects) {
+                                    window.saveProjects();
+                                }
+                                
+                                // Actualizar interfaz
+                                if (window.renderApp) {
+                                    window.renderApp();
+                                }
+                                
+                                alert('🗑️ PROYECTO ELIMINADO: ' + deletedProject.name);
+                                
+                                // Cerrar el menú
+                                const projectMenu = document.getElementById('project-menu');
+                                if (projectMenu) {
+                                    projectMenu.classList.add('hidden');
+                                }
+                                
+                            } else {
+                                alert('❌ Error: No se encontró el proyecto para eliminar');
+                            }
+                            
+                        } catch (error) {
+                            console.error('❌ Error deleting project:', error);
+                            alert('❌ Error al eliminar proyecto: ' + error.message);
+                        }
+                    } else {
+                        console.log('ℹ️ Project deletion cancelled by user');
+                    }
+                });
+                console.log('✅ Delete project button listener configured');
+            } else {
+                console.log('❌ delete-project-btn not found');
+            }
             
             // Event listener global para ESC key
             document.addEventListener('keydown', function(e) {

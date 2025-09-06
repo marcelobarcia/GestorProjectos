@@ -95,18 +95,37 @@ function renderControls(project) {
 }
 
 function renderBaselinesUI(project) {
+    const baselineSelect = document.getElementById('baseline-select');
+    const baselineListContainer = document.getElementById('baseline-list');
+    
+    if (!baselineSelect) {
+        console.warn('⚠️ baseline-select element not found');
+        return;
+    }
+    
+    if (!baselineListContainer) {
+        console.warn('⚠️ baseline-list element not found');
+        return;
+    }
+    
     const currentVal = baselineSelect.value;
     baselineSelect.innerHTML = '<option value="">Estado Actual</option>';
     baselineListContainer.innerHTML = '';
     
+    // Verificar que existe el array de baselines
+    if (!project.baselines || !Array.isArray(project.baselines)) {
+        console.warn('⚠️ project.baselines not available or not an array');
+        return;
+    }
+    
     project.baselines.forEach(b => {
-        baselineSelect.innerHTML += `<option value="${b.id}">${b.name} (${b.tasks.length} tareas)</option>`;
+        baselineSelect.innerHTML += `<option value="${b.id}">${b.name} (${b.tasks ? b.tasks.length : 0} tareas)</option>`;
         const el = document.createElement('div');
         el.className = 'flex justify-between items-center bg-slate-100 p-2 rounded text-sm';
         el.innerHTML = `
             <div>
                 <p class="font-medium">${b.name}</p>
-                <p class="text-xs text-slate-500">${b.tasks.length} tareas - ${new Date(b.createdAt || Date.now()).toLocaleDateString()}</p>
+                <p class="text-xs text-slate-500">${b.tasks ? b.tasks.length : 0} tareas - ${new Date(b.createdAt || Date.now()).toLocaleDateString()}</p>
             </div>
             <button data-id="${b.id}" class="delete-baseline-btn text-slate-400 hover:text-red-500 p-1 rounded-full" title="Eliminar línea base">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
@@ -127,7 +146,20 @@ function renderBaselinesUI(project) {
 }
 
 function renderResourceList(project) {
+    const resourceListContainer = document.getElementById('resource-list');
+    if (!resourceListContainer) {
+        console.warn('⚠️ resource-list element not found');
+        return;
+    }
+    
     resourceListContainer.innerHTML = '';
+    
+    // Verificar que existe el array de recursos
+    if (!project.resources || !Array.isArray(project.resources)) {
+        console.warn('⚠️ project.resources not available or not an array');
+        return;
+    }
+    
     project.resources.forEach(resource => {
         const el = document.createElement('div');
         el.className = 'flex justify-between items-center bg-slate-100 p-2 rounded text-sm';
@@ -137,7 +169,20 @@ function renderResourceList(project) {
 }
 
 function renderHolidayList(project) {
+    const holidayListContainer = document.getElementById('holiday-list');
+    if (!holidayListContainer) {
+        console.warn('⚠️ holiday-list element not found');
+        return;
+    }
+    
     holidayListContainer.innerHTML = '';
+    
+    // Verificar que existe el array de holidays
+    if (!project.holidays || !Array.isArray(project.holidays)) {
+        console.warn('⚠️ project.holidays not available or not an array');
+        return;
+    }
+    
     project.holidays.forEach(h => {
         const el = document.createElement('div');
         el.className = 'flex justify-between items-center bg-slate-100 p-2 rounded text-sm';
@@ -149,21 +194,35 @@ function renderHolidayList(project) {
 function populateResourceDropdowns(project) {
     const selects = [document.getElementById('task-resource'), document.getElementById('edit-task-resource')];
     selects.forEach(select => {
+        if (!select) return;
+        
         const currentVal = select.value;
         select.innerHTML = '<option value="">Sin asignar</option>';
-        project.resources.forEach(r => {
-            select.innerHTML += `<option value="${r.id}">${r.name}</option>`;
-        });
+        
+        // Verificar que existe el array de recursos
+        if (project.resources && Array.isArray(project.resources)) {
+            project.resources.forEach(r => {
+                select.innerHTML += `<option value="${r.id}">${r.name}</option>`;
+            });
+        }
+        
         select.value = currentVal;
     });
 }
 
 function populatePredecessorDropdown(select, project, currentTaskIdToExclude = null) {
+    if (!select) return;
+    
     const currentVal = select.value;
     select.innerHTML = '<option value="">Ninguna</option>';
-    project.tasks.filter(t => t.type === 'task' && t.id !== currentTaskIdToExclude).forEach(t => {
-        select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-    });
+    
+    // Verificar que existe el array de tareas
+    if (project.tasks && Array.isArray(project.tasks)) {
+        project.tasks.filter(t => t.type === 'task' && t.id !== currentTaskIdToExclude).forEach(t => {
+            select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        });
+    }
+    
     select.value = currentVal;
 }
 

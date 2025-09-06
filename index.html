@@ -343,18 +343,26 @@
                     e.stopPropagation();
                     console.log('🆕 NEW PROJECT BUTTON CLICKED');
                     
-                    const projectName = prompt('Nombre del nuevo proyecto:');
+                    // Método simple y directo
+                    let projectName;
+                    try {
+                        projectName = window.prompt('Nombre del nuevo proyecto:');
+                    } catch (error) {
+                        console.error('Error with prompt:', error);
+                        projectName = 'Nuevo Proyecto ' + Date.now();
+                    }
+                    
                     console.log('📝 Project name entered:', projectName, 'Type:', typeof projectName);
                     
-                    if (projectName !== null && projectName !== undefined && String(projectName).trim() !== '') {
+                    if (projectName && projectName !== '' && projectName !== 'null') {
                         try {
-                            const trimmedName = String(projectName).trim();
-                            console.log('✅ Valid project name:', trimmedName);
+                            const safeName = String(projectName);
+                            console.log('✅ Safe project name:', safeName);
                             
                             // Crear nuevo proyecto directamente
                             const newProject = {
                                 id: Date.now(),
-                                name: trimmedName,
+                                name: safeName,
                                 tasks: [],
                                 resources: [],
                                 baselines: [],
@@ -382,13 +390,20 @@
                                 window.renderApp();
                             }
                             
-                            alert('🆕 PROYECTO CREADO: ' + trimmedName);
+                            alert('🆕 PROYECTO CREADO: ' + safeName);
                             
                             // Cerrar el menú
                             const projectMenu = document.getElementById('project-menu');
                             if (projectMenu) {
                                 projectMenu.classList.add('hidden');
                             }
+                            
+                            // Cerrar también el modal de información
+                            const infoModals = document.querySelectorAll('.fixed.inset-0.bg-gray-600.bg-opacity-50');
+                            infoModals.forEach(modal => {
+                                modal.style.display = 'none';
+                                modal.classList.add('hidden');
+                            });
                             
                         } catch (error) {
                             console.error('❌ Error creating project:', error);

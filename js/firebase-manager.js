@@ -184,3 +184,6 @@ class FirebaseManager {
 
 // Instancia global del manager de Firebase
 const firebaseManager = new FirebaseManager();
+
+// Exponer el manager globalmente
+window.firebaseManager = firebaseManager;

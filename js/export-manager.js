@@ -18,8 +18,8 @@ class ExportManager {
         let activeProject = null;
         
         // Método 1: Usar la función getActiveProject() si está disponible
-        if (typeof getActiveProject === 'function') {
-            activeProject = getActiveProject();
+        if (typeof window.getActiveProject === 'function') {
+            activeProject = window.getActiveProject();
         }
         
         // Método 2: Usar variables globales como fallback

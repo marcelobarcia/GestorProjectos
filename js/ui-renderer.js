@@ -37,8 +37,8 @@ function updateProjectDropdown() {
     const projectMenuElement = document.getElementById('project-menu');
     
     console.log('🔄 Updating project dropdown...', {
-        projects: projects.length,
-        activeProjectId,
+        projects: window.projects ? window.projects.length : 0,
+        activeProjectId: window.activeProjectId,
         hasProjectListElement: !!projectListElement
     });
     
@@ -48,17 +48,23 @@ function updateProjectDropdown() {
     }
     
     projectListElement.innerHTML = '';
-    projects.forEach(p => {
+    
+    if (!window.projects) {
+        console.warn('⚠️ window.projects not available');
+        return;
+    }
+    
+    window.projects.forEach(p => {
         console.log('📝 Adding project to dropdown:', p.name, 'ID:', p.id);
         const item = document.createElement('a');
         item.href = '#';
         item.dataset.id = p.id;
-        item.className = `block px-4 py-2 text-sm ${p.id === activeProjectId ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`;
+        item.className = `block px-4 py-2 text-sm ${p.id === window.activeProjectId ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`;
         item.textContent = p.name;
         item.onclick = (e) => { 
             e.preventDefault(); 
             console.log('🔄 Switching to project:', p.name, 'ID:', p.id);
-            activeProjectId = p.id; 
+            window.activeProjectId = p.id; 
             
             if (projectMenuElement) {
                 projectMenuElement.classList.add('hidden');
@@ -68,19 +74,24 @@ function updateProjectDropdown() {
             updateProjectHeader(p);
             
             // Re-renderizar toda la aplicación
-            render(); 
+            if (window.render) window.render(); 
         };
         projectListElement.appendChild(item);
     });
     
-    console.log('✅ Project dropdown updated with', projects.length, 'projects');
+    console.log('✅ Project dropdown updated with', window.projects ? window.projects.length : 0, 'projects');
 }
 
 function renderControls(project) {
-    workWeekendsToggle.checked = project.workWeekends;
-    criticalPathToggle.checked = project.showCriticalPath;
+    const workWeekendsToggle = document.getElementById('work-weekends');
+    const criticalPathToggle = document.getElementById('critical-path');
+    
+    if (workWeekendsToggle) workWeekendsToggle.checked = project.workWeekends;
+    if (criticalPathToggle) criticalPathToggle.checked = project.showCriticalPath;
+    
     document.querySelectorAll('#gantt-view-switcher .view-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`#gantt-view-switcher .view-btn[data-view="${project.currentGanttView}"]`).classList.add('active');
+    const activeBtn = document.querySelector(`#gantt-view-switcher .view-btn[data-view="${project.currentGanttView}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 }
 
 function renderBaselinesUI(project) {

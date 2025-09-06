@@ -1,10 +1,14 @@
 // Form and Modal handling functions
 function openEditModal(taskId) {
-    const project = getActiveProject();
+    const project = window.getActiveProject ? window.getActiveProject() : null;
+    if (!project) return;
+    
     const task = project.tasks.find(t => t.id === taskId);
     if (!task) return;
     
-    const form = editTaskForm;
+    const form = window.editTaskForm;
+    if (!form) return;
+    
     form.querySelector('#edit-task-id').value = task.id;
     form.querySelector('#edit-task-type').value = task.type;
     form.querySelector('#edit-task-name').value = task.name;
@@ -12,7 +16,9 @@ function openEditModal(taskId) {
     form.querySelector('#edit-task-start').value = task.start;
     form.querySelector('#edit-task-duration').value = task.duration;
     
-    populatePredecessorDropdown(form.querySelector('#edit-task-predecessor'), project, task.id);
+    if (window.populatePredecessorDropdown) {
+        window.populatePredecessorDropdown(form.querySelector('#edit-task-predecessor'), project, task.id);
+    }
     form.querySelector('#edit-task-predecessor').value = task.predecessorId || '';
     form.querySelector('#edit-task-resource').value = task.resourceId || '';
     form.querySelector('#edit-task-status').value = task.status || 'Pendiente';
@@ -23,7 +29,7 @@ function openEditModal(taskId) {
     toggleTaskFields(form, task.type === 'task');
     handleMilestoneToggle(form.querySelector('#edit-task-milestone'), form);
 
-    editModal.classList.remove('hidden');
+    if (window.editModal) window.editModal.classList.remove('hidden');
 }
 
 function handleMilestoneToggle(checkbox, form) {
@@ -54,12 +60,13 @@ function toggleTaskFields(form, isTask) {
 }
 
 function updateEndDate(startInput, durationInput, endInput) {
-    const project = getActiveProject();
+    const project = window.getActiveProject ? window.getActiveProject() : null;
     if(!project || !startInput.value || !durationInput.value) return;
+    
     const startDate = startInput.value;
     const duration = parseInt(durationInput.value);
-    const endDate = addBusinessDays(startDate, duration, project);
-    endInput.value = formatDate(endDate);
+    const endDate = window.addBusinessDays ? window.addBusinessDays(startDate, duration, project) : startDate;
+    endInput.value = window.formatDate ? window.formatDate(endDate) : endDate;
 }
 
 function setupFormListeners(form) {
@@ -87,3 +94,10 @@ function setupFormListeners(form) {
         progressValue.textContent = progressInput.value;
     };
 }
+
+// Exponer funciones globalmente
+window.openEditModal = openEditModal;
+window.handleMilestoneToggle = handleMilestoneToggle;
+window.toggleTaskFields = toggleTaskFields;
+window.updateEndDate = updateEndDate;
+window.setupFormListeners = setupFormListeners;

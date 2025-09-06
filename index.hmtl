@@ -409,13 +409,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Application starting...');
             
-            // Initialize application
-            if (window.initializeApp) {
-                console.log('📱 Calling initializeApp()');
-                window.initializeApp();
-            } else {
-                console.error('❌ initializeApp function not found');
-            }
+            // Esperar un poco para que todos los scripts se carguen
+            setTimeout(() => {
+                // Initialize application
+                if (window.initializeApp) {
+                    console.log('📱 Calling initializeApp()');
+                    window.initializeApp();
+                } else {
+                    console.error('❌ initializeApp function not found');
+                }
+            }, 100); // Reducido a 100ms
         });
     </script>
 </body>

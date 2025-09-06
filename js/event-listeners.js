@@ -1,5 +1,6 @@
 // Event Listeners
 let eventListenersSetup = false; // Flag para evitar duplicación
+let handleNewProject; // Función global para poder removerla
 
 function resetEventListeners() {
     console.log('🔄 Resetting event listeners flag...');
@@ -14,6 +15,14 @@ function setupEventListeners() {
     
     console.log('🔗 Setting up event listeners...');
     
+    // Remover listeners previos si existen
+    if (handleNewProject && newProjectBtn) {
+        newProjectBtn.removeEventListener('click', handleNewProject);
+    }
+    if (handleNewProject && createFirstProjectBtn) {
+        createFirstProjectBtn.removeEventListener('click', handleNewProject);
+    }
+    
     // Project menu handling
     projectMenuBtn.addEventListener('click', () => projectMenu.classList.toggle('hidden'));
     document.addEventListener('click', (e) => { 
@@ -23,16 +32,24 @@ function setupEventListeners() {
     });
     
     // Project management
-    const handleNewProject = async () => {
+    handleNewProject = async () => {
+        console.log('🆕 Creating new project...');
         const name = await window.modalManager.prompt('Nombre del nuevo proyecto:', 'Nuevo Proyecto', 'Crear Nuevo Proyecto');
         if (name) { 
+            console.log('📝 Project name entered:', name);
             await createProject(name); 
             // render() ya se llama desde createProject()
         }
         projectMenu.classList.add('hidden');
     };
-    newProjectBtn.addEventListener('click', handleNewProject);
-    createFirstProjectBtn.addEventListener('click', handleNewProject);
+    
+    // Agregar listeners de forma segura
+    if (newProjectBtn) {
+        newProjectBtn.addEventListener('click', handleNewProject);
+    }
+    if (createFirstProjectBtn) {
+        createFirstProjectBtn.addEventListener('click', handleNewProject);
+    }
     
     deleteProjectBtn.addEventListener('click', async () => {
         const project = getActiveProject();

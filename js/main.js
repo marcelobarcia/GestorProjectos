@@ -59,13 +59,26 @@ function debounceAutoSave() {
 async function initializeApp() {
     console.log('🚀 Initializing app for user...');
     
+    // Verificar que las variables globales estén en estado limpio
+    console.log('📊 Initial state check:', {
+        projectsCount: projects ? projects.length : 'undefined',
+        activeProjectId: activeProjectId,
+        isAuthenticated: authManager ? authManager.isAuthenticated() : false
+    });
+    
+    // Asegurar que las variables estén inicializadas
+    if (typeof projects === 'undefined') {
+        window.projects = [];
+    }
+    if (typeof activeProjectId === 'undefined') {
+        window.activeProjectId = null;
+    }
+    
     // Agregar indicador de estado de Firebase
     addFirebaseStatusIndicator();
     
-    // Limpiar estado previo
-    console.log('📝 Current projects before loading:', projects.length);
-    
     // Intentar cargar proyectos desde Firebase
+    console.log('🔄 Loading projects from Firebase...');
     const loadedFromFirebase = await loadProjectsFromFirebase();
     
     console.log('📦 Projects after loading from Firebase:', projects.length);
@@ -75,6 +88,7 @@ async function initializeApp() {
     if (!loadedFromFirebase && projects.length === 0) {
         console.log('🆕 Creating demo project for new user...');
         await createProject('Proyecto Demo', true);
+        console.log('✅ Demo project created, total projects:', projects.length);
     }
     
     // Asegurar que hay un proyecto activo
@@ -89,6 +103,8 @@ async function initializeApp() {
     if (typeof setupEventListeners === 'function') {
         console.log('🔗 Setting up event listeners...');
         setupEventListeners();
+    } else {
+        console.warn('⚠️ setupEventListeners function not found');
     }
     
     // Renderizar la interfaz
@@ -97,13 +113,16 @@ async function initializeApp() {
     
     console.log('✅ App initialization completed');
     
-    // Auto-backup cada 30 minutos
-    setInterval(async () => {
-        if (projects.length > 0) {
-            await firebaseManager.createBackup();
-            console.log('Auto-backup created');
-        }
-    }, 30 * 60 * 1000); // 30 minutos
+    // Auto-backup cada 30 minutos (solo configurar una vez)
+    if (!window.autoBackupConfigured) {
+        setInterval(async () => {
+            if (projects.length > 0) {
+                await firebaseManager.createBackup();
+                console.log('Auto-backup created');
+            }
+        }, 30 * 60 * 1000); // 30 minutos
+        window.autoBackupConfigured = true;
+    }
 }
 
 function addFirebaseStatusIndicator() {

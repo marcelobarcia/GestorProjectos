@@ -159,14 +159,16 @@ class AuthManager {
 
     handleAuthStateChange(user) {
         if (user) {
-            // Usuario autenticado - limpiar datos previos y cargar del usuario actual
-            this.clearPreviousUserData();
+            console.log('👤 User authenticated:', user.email);
+            
+            // Usuario autenticado - mostrar app y luego inicializar
             this.showMainApp();
             
             // Guardar datos del usuario
             this.saveUserSession(user);
             
         } else {
+            console.log('🚫 User not authenticated');
             // Usuario no autenticado - mostrar login
             this.showLoginScreen();
         }
@@ -175,13 +177,18 @@ class AuthManager {
     clearPreviousUserData() {
         console.log('🧹 Clearing previous user data...');
         
+        // Resetear event listeners flag
+        if (typeof resetEventListeners === 'function') {
+            resetEventListeners();
+        }
+        
         // Limpiar datos del usuario anterior
         if (typeof projects !== 'undefined') {
-            console.log('Clearing projects array, previous count:', projects.length);
+            console.log('📦 Clearing projects array, previous count:', projects.length);
             projects.length = 0; // Limpiar array de proyectos
         }
         if (typeof activeProjectId !== 'undefined') {
-            console.log('Clearing active project ID, previous value:', activeProjectId);
+            console.log('🎯 Clearing active project ID, previous value:', activeProjectId);
             activeProjectId = null; // Resetear proyecto activo
         }
         
@@ -189,10 +196,21 @@ class AuthManager {
         localStorage.removeItem('projects');
         localStorage.removeItem('activeProjectId');
         
+        // Limpiar estado visual
+        const projectNameInput = document.getElementById('project-name-input');
+        if (projectNameInput) {
+            projectNameInput.value = '';
+        }
+        
         console.log('✅ Previous user data cleared completely');
     }
 
     showMainApp() {
+        console.log('🏠 Showing main app...');
+        
+        // Limpiar datos del usuario anterior
+        this.clearPreviousUserData();
+        
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
         
@@ -201,19 +219,23 @@ class AuthManager {
         
         // Forzar reinicialización completa de la aplicación para el nuevo usuario
         setTimeout(async () => {
+            console.log('⏰ Starting app initialization...');
             if (typeof initializeApp === 'function') {
-                console.log('Initializing app for authenticated user...');
+                console.log('🚀 Calling initializeApp for authenticated user...');
                 await initializeApp();
             } else {
+                console.warn('⚠️ initializeApp function not found');
                 // Fallback: buscar otras funciones de inicialización
                 setTimeout(async () => {
                     if (typeof initializeApp === 'function') {
-                        console.log('Fallback: Initializing app for authenticated user...');
+                        console.log('🔄 Fallback: Calling initializeApp...');
                         await initializeApp();
+                    } else {
+                        console.error('❌ initializeApp function still not found');
                     }
                 }, 500);
             }
-        }, 100);
+        }, 200); // Increased timeout to ensure DOM is ready
     }
 
     showLoginScreen() {
@@ -270,22 +292,20 @@ class AuthManager {
 
     async logout() {
         try {
+            console.log('🚪 Starting logout process...');
+            
             // Limpiar datos del usuario actual antes de cerrar sesión
             this.clearPreviousUserData();
-            
-            // Resetear event listeners para el próximo usuario
-            if (typeof resetEventListeners === 'function') {
-                resetEventListeners();
-            }
             
             await window.signOut(window.firebaseAuth);
             localStorage.removeItem('userSession');
             window.currentUser = null;
             this.currentUser = null;
             
+            console.log('✅ Logout completed successfully');
             this.showSuccess('Sesión cerrada correctamente');
         } catch (error) {
-            console.error('Error al cerrar sesión:', error);
+            console.error('❌ Error al cerrar sesión:', error);
             this.showError('Error al cerrar sesión');
         }
     }

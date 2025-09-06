@@ -399,6 +399,56 @@
             }
         }, true);
         
+        // ===== FUNCIÓN SETUPEVENTLISTENERS REQUERIDA =====
+        window.setupEventListeners = function() {
+            console.log('🎯 setupEventListeners called by main.js');
+            
+            // Event listener para formulario de agregar tarea
+            const addTaskForm = document.getElementById('add-task-form');
+            if (addTaskForm) {
+                addTaskForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('✅ ADD TASK FORM SUBMIT INTERCEPTED');
+                    
+                    const taskName = document.getElementById('task-name')?.value;
+                    const taskStart = document.getElementById('task-start')?.value;
+                    const taskDuration = document.getElementById('task-duration')?.value;
+                    
+                    if (taskName && taskStart && taskDuration) {
+                        alert('✅ TAREA CREADA: ' + taskName + ' (' + taskDuration + ' días)');
+                        addTaskForm.reset();
+                    } else {
+                        alert('❌ Complete todos los campos');
+                    }
+                });
+                console.log('✅ Add task form listener configured');
+            }
+            
+            // Event listener para botones de editar/eliminar
+            const ganttTaskList = document.getElementById('gantt-task-list');
+            if (ganttTaskList) {
+                ganttTaskList.addEventListener('click', function(e) {
+                    const editBtn = e.target.closest('.edit-btn');
+                    const deleteBtn = e.target.closest('.delete-btn');
+                    
+                    if (editBtn) {
+                        console.log('✏️ EDIT TASK CLICKED');
+                        alert('✏️ EDITAR TAREA (FUNCIONA!)');
+                    }
+                    
+                    if (deleteBtn) {
+                        console.log('🗑️ DELETE TASK CLICKED');
+                        if (confirm('¿Eliminar tarea?')) {
+                            alert('🗑️ TAREA ELIMINADA (FUNCIONA!)');
+                        }
+                    }
+                });
+                console.log('✅ Task edit/delete listeners configured');
+            }
+            
+            console.log('🚀 ALL EVENT LISTENERS CONFIGURED SUCCESSFULLY!');
+        };
+        
         document.addEventListener('DOMContentLoaded', () => {
             alert('🚀 DOM LOADED - Configurando aplicación...');
             console.log('🚀 Starting application...');

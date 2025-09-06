@@ -95,17 +95,34 @@ function setupEventListeners() {
     saveBaselineBtn.addEventListener('click', async () => {
         const project = getActiveProject(); 
         if(!project) return;
+        
         const name = await window.modalManager.prompt(
             "Nombre para la nueva Línea Base:", 
             `Línea Base - ${new Date().toLocaleDateString()}`,
             'Crear Línea Base'
         );
+        
         if (name) {
-            project.baselines.push({ 
+            console.log('💾 Creating new baseline:', name);
+            console.log('Tasks to save:', project.tasks.length);
+            
+            // Crear la nueva línea base con las tareas actuales
+            const newBaseline = { 
                 id: Date.now(), 
                 name: name, 
-                tasks: JSON.parse(JSON.stringify(project.tasks)) 
-            });
+                tasks: JSON.parse(JSON.stringify(project.tasks)),
+                createdAt: new Date().toISOString()
+            };
+            
+            project.baselines.push(newBaseline);
+            
+            // Si es la primera línea base y no hay estado actual guardado, guardarlo
+            if (project.baselines.length === 1 && !project.currentStateTasks) {
+                project.currentStateTasks = JSON.parse(JSON.stringify(project.tasks));
+                console.log('📋 Saved current state as backup');
+            }
+            
+            showNotification(`Línea base "${name}" creada exitosamente`, 'success');
             render();
         }
     });
@@ -113,20 +130,75 @@ function setupEventListeners() {
     baselineSelect.addEventListener('change', (e) => {
         const project = getActiveProject(); 
         if(project) { 
-            project.selectedBaselineId = e.target.value ? parseInt(e.target.value) : null; 
+            const selectedBaselineId = e.target.value ? parseInt(e.target.value) : null;
+            
+            if (selectedBaselineId) {
+                // Restaurar tareas de la línea base seleccionada
+                const selectedBaseline = project.baselines.find(b => b.id === selectedBaselineId);
+                if (selectedBaseline) {
+                    console.log('📦 Restoring tasks from baseline:', selectedBaseline.name);
+                    console.log('Previous tasks count:', project.tasks.length);
+                    
+                    // Guardar las tareas actuales como una línea base temporal si no hay ninguna seleccionada
+                    if (!project.selectedBaselineId) {
+                        console.log('💾 Saving current state as temporary baseline');
+                        project.currentStateTasks = JSON.parse(JSON.stringify(project.tasks));
+                    }
+                    
+                    // Restaurar las tareas de la línea base
+                    project.tasks = JSON.parse(JSON.stringify(selectedBaseline.tasks));
+                    project.selectedBaselineId = selectedBaselineId;
+                    
+                    console.log('New tasks count:', project.tasks.length);
+                    showNotification(`Línea base "${selectedBaseline.name}" restaurada (${selectedBaseline.tasks.length} tareas)`, 'success');
+                }
+            } else {
+                // Restaurar al estado actual si existe
+                if (project.currentStateTasks) {
+                    console.log('🔄 Restoring to current state');
+                    project.tasks = JSON.parse(JSON.stringify(project.currentStateTasks));
+                    delete project.currentStateTasks;
+                    showNotification('Restaurado al estado actual', 'info');
+                }
+                project.selectedBaselineId = null;
+            }
+            
             render(); 
         }
     });
 
-    baselineListContainer.addEventListener('click', (e) => {
+    baselineListContainer.addEventListener('click', async (e) => {
         const btn = e.target.closest('.delete-baseline-btn');
         const project = getActiveProject();
         if (btn && project) {
-            project.baselines = project.baselines.filter(b => b.id !== parseInt(btn.dataset.id));
-            if (project.selectedBaselineId === parseInt(btn.dataset.id)) {
-                project.selectedBaselineId = null;
+            const baselineId = parseInt(btn.dataset.id);
+            const baseline = project.baselines.find(b => b.id === baselineId);
+            
+            if (baseline) {
+                const confirmed = await window.modalManager.confirm(
+                    `¿Estás seguro de que quieres eliminar la línea base "${baseline.name}"?`,
+                    'Eliminar Línea Base'
+                );
+                
+                if (confirmed === 'confirm') {
+                    console.log('🗑️ Deleting baseline:', baseline.name);
+                    
+                    // Si estamos viendo la línea base que se va a eliminar, restaurar al estado actual
+                    if (project.selectedBaselineId === baselineId) {
+                        if (project.currentStateTasks) {
+                            project.tasks = JSON.parse(JSON.stringify(project.currentStateTasks));
+                            showNotification('Restaurado al estado actual', 'info');
+                        }
+                        project.selectedBaselineId = null;
+                    }
+                    
+                    // Eliminar la línea base
+                    project.baselines = project.baselines.filter(b => b.id !== baselineId);
+                    
+                    showNotification(`Línea base "${baseline.name}" eliminada`, 'info');
+                    render();
+                }
             }
-            render();
         }
     });
 

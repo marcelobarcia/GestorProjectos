@@ -13,8 +13,18 @@ function updateProjectHeader(project) {
         // Verificar si el elemento existe antes de intentar actualizar
         const nameInput = document.getElementById('project-name-input');
         if (nameInput) {
-            nameInput.value = project.name;
-            console.log('📝 Updated project header:', project.name);
+            let displayName = project.name;
+            
+            // Agregar indicador si estamos viendo una línea base
+            if (project.selectedBaselineId) {
+                const selectedBaseline = project.baselines.find(b => b.id === project.selectedBaselineId);
+                if (selectedBaseline) {
+                    displayName += ` [📊 ${selectedBaseline.name}]`;
+                }
+            }
+            
+            nameInput.value = displayName;
+            console.log('📝 Updated project header:', displayName);
         } else {
             console.warn('⚠️ project-name-input element not found');
         }
@@ -75,17 +85,34 @@ function renderControls(project) {
 
 function renderBaselinesUI(project) {
     const currentVal = baselineSelect.value;
-    baselineSelect.innerHTML = '<option value="">Ninguna</option>';
+    baselineSelect.innerHTML = '<option value="">Estado Actual</option>';
     baselineListContainer.innerHTML = '';
     
     project.baselines.forEach(b => {
-        baselineSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+        baselineSelect.innerHTML += `<option value="${b.id}">${b.name} (${b.tasks.length} tareas)</option>`;
         const el = document.createElement('div');
         el.className = 'flex justify-between items-center bg-slate-100 p-2 rounded text-sm';
-        el.innerHTML = `<p class="font-medium">${b.name}</p><button data-id="${b.id}" class="delete-baseline-btn text-slate-400 hover:text-red-500 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6m4-6v6"/></svg></button>`;
+        el.innerHTML = `
+            <div>
+                <p class="font-medium">${b.name}</p>
+                <p class="text-xs text-slate-500">${b.tasks.length} tareas - ${new Date(b.createdAt || Date.now()).toLocaleDateString()}</p>
+            </div>
+            <button data-id="${b.id}" class="delete-baseline-btn text-slate-400 hover:text-red-500 p-1 rounded-full" title="Eliminar línea base">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="none" stroke="currentColor" stroke-width="2" d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6m4-6v6"/>
+                </svg>
+            </button>
+        `;
         baselineListContainer.appendChild(el);
     });
+    
     baselineSelect.value = project.selectedBaselineId || '';
+    
+    // Agregar indicador visual si hay una línea base seleccionada
+    const selectedBaseline = project.selectedBaselineId ? project.baselines.find(b => b.id === project.selectedBaselineId) : null;
+    if (selectedBaseline) {
+        console.log('📊 Currently viewing baseline:', selectedBaseline.name);
+    }
 }
 
 function renderResourceList(project) {

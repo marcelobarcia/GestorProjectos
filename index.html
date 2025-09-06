@@ -98,84 +98,81 @@
                  </div>
 
                 <main id="gantt-view" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <!-- Panel de Configuración y Controles - Horizontal -->
-                    <div class="bg-slate-50 border-b border-slate-200 p-4">
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Configuración General -->
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="text-lg font-semibold text-slate-800">Configuración</h3>
+                    <!-- Panel de Configuración y Controles -->
+                    <div class="bg-slate-50 border-b border-slate-200 p-6">
+                        <!-- Configuración -->
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                            <div class="flex items-center gap-6">
+                                <h3 class="text-lg font-semibold text-slate-800">Configuración</h3>
+                                <div class="flex items-center gap-4">
                                     <div class="flex items-center space-x-2">
                                         <label for="work-weekends-toggle" class="text-sm font-medium text-slate-700">Incluir fines de semana</label>
-                                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                                            <input type="checkbox" name="toggle" id="work-weekends-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" id="work-weekends-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
                                             <label for="work-weekends-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="flex items-center space-x-4">
                                     <div class="flex items-center space-x-2">
                                         <label for="critical-path-toggle" class="text-sm font-medium text-slate-700">Ruta Crítica</label>
                                         <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                            <input type="checkbox" name="toggle" id="critical-path-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                            <input type="checkbox" id="critical-path-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
                                             <label for="critical-path-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                                         </div>
                                     </div>
-                                    <div id="gantt-view-switcher" class="flex items-center bg-slate-200 rounded-md p-1 text-sm font-semibold">
-                                        <button data-view="day" class="view-btn active px-3 py-1 rounded-md">Día</button>
-                                        <button data-view="week" class="view-btn px-3 py-1 rounded-md">Semana</button>
-                                        <button data-view="month" class="view-btn px-3 py-1 rounded-md">Mes</button>
-                                        <button data-view="year" class="view-btn px-3 py-1 rounded-md">Año</button>
-                                    </div>
                                 </div>
                             </div>
-                            
-                            <!-- Formulario de Añadir Tarea - Horizontal -->
-                            <div class="lg:col-span-2">
-                                <h3 class="text-lg font-semibold mb-4 text-slate-800">Añadir Elemento</h3>
-                                <form id="add-task-form" class="grid grid-cols-6 gap-3">
+                            <div id="gantt-view-switcher" class="flex items-center bg-slate-200 rounded-md p-1 text-sm font-semibold">
+                                <button data-view="day" class="view-btn active px-3 py-1 rounded-md">Día</button>
+                                <button data-view="week" class="view-btn px-3 py-1 rounded-md">Semana</button>
+                                <button data-view="month" class="view-btn px-3 py-1 rounded-md">Mes</button>
+                                <button data-view="year" class="view-btn px-3 py-1 rounded-md">Año</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulario de Añadir Tarea -->
+                        <div class="bg-white rounded-lg border border-slate-200 p-4">
+                            <h4 class="text-md font-semibold mb-3 text-slate-800">Añadir Elemento</h4>
+                            <form id="add-task-form">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                                     <div>
-                                        <label for="task-type" class="block text-xs font-medium text-slate-700 mb-1">Tipo</label>
-                                        <select id="task-type" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                        <label for="task-type" class="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
+                                        <select id="task-type" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                             <option value="task">Actividad</option>
                                             <option value="phase">Fase</option>
                                         </select>
                                     </div>
-                                    <div class="col-span-2">
-                                        <label for="task-name" class="block text-xs font-medium text-slate-700 mb-1">Nombre</label>
-                                        <input type="text" id="task-name" required class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Ej: Diseño de UI">
+                                    <div>
+                                        <label for="task-name" class="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
+                                        <input type="text" id="task-name" required class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Ej: Diseño de UI">
                                     </div>
                                     <div>
-                                        <label for="task-start" class="block text-xs font-medium text-slate-700 mb-1">Fecha Inicio</label>
-                                        <input type="date" id="task-start" required class="w-full rounded-md border-slate-300 shadow-sm text-sm">
+                                        <label for="task-start" class="block text-sm font-medium text-slate-700 mb-1">Fecha Inicio</label>
+                                        <input type="date" id="task-start" required class="w-full rounded-md border-slate-300 shadow-sm">
                                     </div>
                                     <div>
-                                        <label for="task-duration" class="block text-xs font-medium text-slate-700 mb-1">Duración (días)</label>
-                                        <input type="number" id="task-duration" required class="w-full rounded-md border-slate-300 shadow-sm text-sm" min="1" value="1">
+                                        <label for="task-duration" class="block text-sm font-medium text-slate-700 mb-1">Duración (días)</label>
+                                        <input type="number" id="task-duration" required class="w-full rounded-md border-slate-300 shadow-sm" min="1" value="1">
                                     </div>
-                                    <div class="flex items-end">
-                                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition text-sm">
-                                            Añadir
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Segunda fila de campos -->
-                                    <div id="milestone-container" class="flex items-center pt-2">
-                                        <input id="task-milestone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                        <label for="task-milestone" class="ml-2 block text-xs font-medium text-slate-700">Es un Hito</label>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                                    <div id="milestone-container">
+                                        <div class="flex items-center pt-6">
+                                            <input id="task-milestone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                            <label for="task-milestone" class="ml-2 block text-sm font-medium text-slate-700">Es un Hito</label>
+                                        </div>
                                     </div>
                                     <div>
-                                        <label for="task-predecessor" class="block text-xs font-medium text-slate-700 mb-1">Predecesora</label>
-                                        <select id="task-predecessor" class="w-full rounded-md border-slate-300 shadow-sm text-sm"></select>
+                                        <label for="task-predecessor" class="block text-sm font-medium text-slate-700 mb-1">Predecesora</label>
+                                        <select id="task-predecessor" class="w-full rounded-md border-slate-300 shadow-sm"></select>
                                     </div>
                                     <div>
-                                        <label for="task-resource" class="block text-xs font-medium text-slate-700 mb-1">Recurso</label>
-                                        <select id="task-resource" class="w-full rounded-md border-slate-300 shadow-sm text-sm"></select>
+                                        <label for="task-resource" class="block text-sm font-medium text-slate-700 mb-1">Recurso</label>
+                                        <select id="task-resource" class="w-full rounded-md border-slate-300 shadow-sm"></select>
                                     </div>
                                     <div>
-                                        <label for="task-status" class="block text-xs font-medium text-slate-700 mb-1">Estado</label>
-                                        <select id="task-status" class="w-full rounded-md border-slate-300 shadow-sm text-sm">
+                                        <label for="task-status" class="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+                                        <select id="task-status" class="w-full rounded-md border-slate-300 shadow-sm">
                                             <option>Pendiente</option>
                                             <option>En Progreso</option>
                                             <option>Completada</option>
@@ -183,15 +180,24 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="task-progress" class="block text-xs font-medium text-slate-700 mb-1">Progreso: <span id="progress-value">0</span>%</label>
+                                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                                            Añadir
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campos adicionales en una tercera fila más compacta -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-200">
+                                    <div>
+                                        <label for="task-progress" class="block text-sm font-medium text-slate-700 mb-1">Progreso: <span id="progress-value">0</span>%</label>
                                         <input type="range" id="task-progress" min="0" max="100" value="0" class="w-full">
                                     </div>
                                     <div>
-                                        <label for="task-end" class="block text-xs font-medium text-slate-700 mb-1">Fecha Fin (calc.)</label>
-                                        <input type="date" id="task-end" required class="w-full rounded-md bg-slate-100 text-sm" disabled>
+                                        <label for="task-end" class="block text-sm font-medium text-slate-700 mb-1">Fecha Fin (calculada)</label>
+                                        <input type="date" id="task-end" required class="w-full rounded-md bg-slate-100 border-slate-300" readonly>
                                     </div>
-                                </form>
-                            </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                     

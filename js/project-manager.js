@@ -45,7 +45,14 @@ async function createProject(name, isDefault = false) {
     // Guardar en Firebase
     await saveProjectsToFirebase();
     
+    // Re-renderizar para actualizar la UI
+    if (typeof render === 'function') {
+        render();
+    }
+    
     showNotification('Proyecto creado exitosamente', 'success');
+    
+    return newProject;
 }
 
 async function deleteProject(projectId) {
@@ -62,6 +69,11 @@ async function deleteProject(projectId) {
     // Ajustar proyecto activo
     if (activeProjectId === projectId) {
         activeProjectId = projects.length > 0 ? projects[0].id : null;
+    }
+    
+    // Re-renderizar para actualizar la UI
+    if (typeof render === 'function') {
+        render();
     }
     
     showNotification(`Proyecto "${project.name}" eliminado`, 'info');

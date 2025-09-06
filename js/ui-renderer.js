@@ -1,6 +1,22 @@
 // UI Rendering functions
 function renderProjectUI(project) {
-    projectNameInput.value = project.name;
+    // Actualizar el nombre del proyecto en el header
+    updateProjectHeader(project);
+    
+    // Siempre actualizar el dropdown de proyectos
+    updateProjectDropdown();
+}
+
+// Función para actualizar solo el header del proyecto
+function updateProjectHeader(project) {
+    if (project && projectNameInput) {
+        projectNameInput.value = project.name;
+        console.log('📝 Updated project header:', project.name);
+    }
+}
+
+// Nueva función para actualizar el dropdown de proyectos
+function updateProjectDropdown() {
     projectList.innerHTML = '';
     projects.forEach(p => {
         const item = document.createElement('a');
@@ -10,8 +26,14 @@ function renderProjectUI(project) {
         item.textContent = p.name;
         item.onclick = (e) => { 
             e.preventDefault(); 
+            console.log('🔄 Switching to project:', p.name, 'ID:', p.id);
             activeProjectId = p.id; 
-            projectMenu.classList.add('hidden'); 
+            projectMenu.classList.add('hidden');
+            
+            // Actualizar el header inmediatamente
+            updateProjectHeader(p);
+            
+            // Re-renderizar toda la aplicación
             render(); 
         };
         projectList.appendChild(item);

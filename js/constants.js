@@ -17,3 +17,4 @@ const VIEW_CONFIGS = {
 // Variables globales
 let projects = [];
 let activeProjectId = null;
+let currentView = 'month'; // Vista actual del Gantt (day, week, month, year)

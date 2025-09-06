@@ -42,12 +42,18 @@ async function createProject(name, isDefault = false) {
     projects.push(newProject);
     activeProjectId = newProject.id;
     
+    console.log('✅ Project created:', newProject.name, 'ID:', newProject.id);
+    console.log('🎯 Active project set to:', activeProjectId);
+    
     // Guardar en Firebase
     await saveProjectsToFirebase();
     
     // Re-renderizar para actualizar la UI
     if (typeof render === 'function') {
+        console.log('🔄 Calling render() after project creation');
         render();
+    } else {
+        console.warn('⚠️ render function not available');
     }
     
     showNotification('Proyecto creado exitosamente', 'success');

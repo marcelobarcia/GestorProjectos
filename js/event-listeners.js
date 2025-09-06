@@ -13,7 +13,7 @@ function setupEventListeners() {
         const name = await window.modalManager.prompt('Nombre del nuevo proyecto:', 'Nuevo Proyecto', 'Crear Nuevo Proyecto');
         if (name) { 
             await createProject(name); 
-            render(); 
+            // render() ya se llama desde createProject()
         }
         projectMenu.classList.add('hidden');
     };

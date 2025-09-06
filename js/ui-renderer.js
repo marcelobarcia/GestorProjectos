@@ -9,15 +9,29 @@ function renderProjectUI(project) {
 
 // Función para actualizar solo el header del proyecto
 function updateProjectHeader(project) {
-    if (project && projectNameInput) {
-        projectNameInput.value = project.name;
-        console.log('📝 Updated project header:', project.name);
+    if (project) {
+        // Verificar si el elemento existe antes de intentar actualizar
+        const nameInput = document.getElementById('project-name-input');
+        if (nameInput) {
+            nameInput.value = project.name;
+            console.log('📝 Updated project header:', project.name);
+        } else {
+            console.warn('⚠️ project-name-input element not found');
+        }
     }
 }
 
 // Nueva función para actualizar el dropdown de proyectos
 function updateProjectDropdown() {
-    projectList.innerHTML = '';
+    const projectListElement = document.getElementById('project-list');
+    const projectMenuElement = document.getElementById('project-menu');
+    
+    if (!projectListElement) {
+        console.warn('⚠️ project-list element not found');
+        return;
+    }
+    
+    projectListElement.innerHTML = '';
     projects.forEach(p => {
         const item = document.createElement('a');
         item.href = '#';
@@ -28,7 +42,10 @@ function updateProjectDropdown() {
             e.preventDefault(); 
             console.log('🔄 Switching to project:', p.name, 'ID:', p.id);
             activeProjectId = p.id; 
-            projectMenu.classList.add('hidden');
+            
+            if (projectMenuElement) {
+                projectMenuElement.classList.add('hidden');
+            }
             
             // Actualizar el header inmediatamente
             updateProjectHeader(p);
@@ -36,7 +53,7 @@ function updateProjectDropdown() {
             // Re-renderizar toda la aplicación
             render(); 
         };
-        projectList.appendChild(item);
+        projectListElement.appendChild(item);
     });
 }
 

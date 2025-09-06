@@ -389,6 +389,7 @@
     <script src="js/firebase-manager.js"></script>
     <script src="js/task-manager.js"></script>
     <script src="js/project-manager.js"></script>
+    <script src="js/schedule-calculator.js"></script>
     
     <!-- Rendering engines -->
     <script src="js/gantt-timeline.js"></script>

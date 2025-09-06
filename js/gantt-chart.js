@@ -8,7 +8,8 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
     
     chartArea.innerHTML = '';
     const chartWrapper = document.createElement('div');
-    chartWrapper.className = 'relative w-full h-full';
+           const direction = daysMoved > 0 ? 'adelantada' : 'atrasada';
+        window.showNotification(`"${task.name}" ${direction} ${Math.abs(daysMoved)} día(s)`, 'success');hartWrapper.className = 'relative w-full h-full';
     const rowHeight = 64; // Height for each task row
     const totalRows = project.tasks.length;
     const minHeight = Math.max(400, totalRows * rowHeight);
@@ -281,7 +282,7 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         const taskId = e.dataTransfer.getData('text/plain');
         console.log('📦 Task ID del drop:', taskId);
         
-        const task = project.tasks.find(t => t.id === taskId);
+        const task = project.tasks.find(t => t.id === parseInt(taskId));
         
         if (!task) {
             console.warn('❌ Tarea no encontrada:', taskId);
@@ -289,7 +290,7 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         }
         
         if (task.type === 'phase') {
-            showNotification('No se pueden mover las fases', 'warning');
+            window.showNotification('No se pueden mover las fases', 'warning');
             return;
         }
         
@@ -314,7 +315,7 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
                 if (newStartDate < predecessorEndDate) {
                     newStartDate.setTime(predecessorEndDate.getTime());
                     newStartDate.setDate(newStartDate.getDate() + 1);
-                    showNotification('Fecha ajustada por dependencias', 'info');
+                    window.showNotification('Fecha ajustada por dependencias', 'info');
                 }
             }
         }
@@ -332,7 +333,7 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         
         // Verificar si realmente cambió
         if (task.start === newStart) {
-            showNotification('La tarea ya está en esa posición', 'info');
+            window.showNotification('La tarea ya está en esa posición', 'info');
             return;
         }
         
@@ -344,14 +345,14 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         // Mostrar notificación con más información
         const daysMoved = Math.round((window.parseDate(newStart) - window.parseDate(oldStart)) / (1000 * 3600 * 24));
         const direction = daysMoved > 0 ? 'adelantada' : 'retrasada';
-        showNotification(`"${task.name}" ${direction} ${Math.abs(daysMoved)} día(s)`, 'success');
+        window.showNotification(`"${task.name}" ${direction} ${Math.abs(daysMoved)} día(s)`, 'success');
         
         // Recalcular dependencias y renderizar
-        calculateProjectSchedule(project);
-        renderGantt(project);
+        if (window.calculateProjectSchedule) window.calculateProjectSchedule(project);
+        if (window.renderGantt) window.renderGantt(project);
         
         // Guardar cambios
-        updateProject(project);
+        if (window.updateProject) window.updateProject(project);
         
         console.log('🎉 Drop completado exitosamente');
     });

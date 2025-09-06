@@ -26,7 +26,11 @@
                 'window.activeProjectId': window.activeProjectId,
                 'window.TaskManager': !!window.TaskManager,
                 'window.updateProject': typeof window.updateProject,
-                'window.renderApp': typeof window.renderApp
+                'window.renderApp': typeof window.renderApp,
+                'window.renderGantt': typeof window.renderGantt,
+                'window.renderGanttChart': typeof window.renderGanttChart,
+                'window.renderGanttTimeline': typeof window.renderGanttTimeline,
+                'window.updateGanttChart': typeof window.updateGanttChart
             });
             
             // Event listener para formulario de agregar tarea
@@ -444,15 +448,33 @@
                                 }
                                 
                                 // Actualizar la interfaz Gantt
-                                if (window.renderGanttChart) {
-                                    window.renderGanttChart();
+                                if (window.renderGantt && typeof window.renderGantt === 'function') {
+                                    console.log('📞 Calling renderGantt with project');
+                                    window.renderGantt(activeProject);
                                 } else if (window.updateGanttChart) {
+                                    console.log('📞 Calling updateGanttChart');
                                     window.updateGanttChart();
                                 } else if (window.renderApp) {
+                                    console.log('📞 Calling renderApp');
                                     window.renderApp();
+                                } else {
+                                    console.log('⚠️ No render function found, trying alternative methods');
+                                    
+                                    // Intentar trigger eventos personalizados
+                                    const ganttUpdateEvent = new CustomEvent('ganttViewChanged', {
+                                        detail: { view: newView, project: activeProject }
+                                    });
+                                    document.dispatchEvent(ganttUpdateEvent);
+                                    
+                                    // Forzar re-render del timeline y chart
+                                    if (window.renderGanttTimeline && window.renderGanttChart) {
+                                        console.log('📞 Calling renderGanttTimeline and renderGanttChart');
+                                        window.renderGanttTimeline(activeProject);
+                                        window.renderGanttChart(activeProject);
+                                    }
                                 }
                                 
-                                alert('📊 VISTA CAMBIADA A: ' + newView.toUpperCase());
+                                console.log('✅ Vista cambiada a:', newView);
                             } else {
                                 alert('❌ No hay proyecto activo');
                             }
@@ -491,7 +513,7 @@
                         mainViewBtn.classList.add('border-blue-600', 'text-blue-600');
                         mainViewBtn.classList.remove('border-transparent', 'text-slate-500');
                         
-                        alert('🔄 VISTA PRINCIPAL CAMBIADA A: ' + newView.toUpperCase());
+                        console.log('✅ Vista principal cambiada a:', newView);
                     }
                 });
                 console.log('✅ Main view switcher configured');

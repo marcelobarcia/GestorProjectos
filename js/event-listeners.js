@@ -10,7 +10,7 @@ function setupEventListeners() {
     
     // Project management
     const handleNewProject = async () => {
-        const name = prompt('Nombre del nuevo proyecto:', 'Nuevo Proyecto');
+        const name = await window.modalManager.prompt('Nombre del nuevo proyecto:', 'Nuevo Proyecto', 'Crear Nuevo Proyecto');
         if (name) { 
             await createProject(name); 
             render(); 
@@ -22,9 +22,15 @@ function setupEventListeners() {
     
     deleteProjectBtn.addEventListener('click', async () => {
         const project = getActiveProject();
-        if (project && confirm(`¿Estás seguro de que quieres eliminar el proyecto "${project.name}"? Esta acción no se puede deshacer.`)) {
-            await deleteProject(project.id);
-            render();
+        if (project) {
+            const confirmed = await window.modalManager.confirm(
+                `¿Estás seguro de que quieres eliminar el proyecto "${project.name}"? Esta acción no se puede deshacer.`,
+                'Eliminar Proyecto'
+            );
+            if (confirmed === 'confirm') {
+                await deleteProject(project.id);
+                render();
+            }
         }
     });
     
@@ -55,10 +61,14 @@ function setupEventListeners() {
     });
 
     // Baseline management
-    saveBaselineBtn.addEventListener('click', () => {
+    saveBaselineBtn.addEventListener('click', async () => {
         const project = getActiveProject(); 
         if(!project) return;
-        const name = prompt("Nombre para la nueva Línea Base:", `Línea Base - ${new Date().toLocaleDateString()}`);
+        const name = await window.modalManager.prompt(
+            "Nombre para la nueva Línea Base:", 
+            `Línea Base - ${new Date().toLocaleDateString()}`,
+            'Crear Línea Base'
+        );
         if (name) {
             project.baselines.push({ 
                 id: Date.now(), 
@@ -192,7 +202,7 @@ function setupEventListeners() {
     });
 
     // Task list interactions
-    ganttTaskList.addEventListener('click', (e) => {
+    ganttTaskList.addEventListener('click', async (e) => {
         const project = getActiveProject();
         if(!project) return;
         const editBtn = e.target.closest('.edit-btn');
@@ -201,7 +211,11 @@ function setupEventListeners() {
             openEditModal(parseInt(editBtn.dataset.id));
         }
         if(deleteBtn) {
-            if(confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+            const confirmed = await window.modalManager.confirm(
+                '¿Estás seguro de que quieres eliminar esta tarea?',
+                'Eliminar Tarea'
+            );
+            if(confirmed === 'confirm') {
                 project.tasks = project.tasks.filter(t => t.id !== parseInt(deleteBtn.dataset.id));
                 render();
             }

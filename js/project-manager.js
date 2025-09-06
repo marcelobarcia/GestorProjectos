@@ -143,7 +143,17 @@ function updateConnectionStatus(connected, errorMessage = '') {
 }
 
 function showNotification(message, type = 'info') {
-    // Crear elemento de notificación
+    // Usar el modal manager si está disponible para notificaciones críticas
+    if (window.modalManager && (type === 'error' || type === 'warning')) {
+        switch(type) {
+            case 'error':
+                return window.modalManager.error(message);
+            case 'warning':
+                return window.modalManager.warning(message);
+        }
+    }
+    
+    // Para info y success, usar el sistema de toast actual (más discreto)
     const notification = document.createElement('div');
     const bgColor = {
         success: 'bg-green-500',

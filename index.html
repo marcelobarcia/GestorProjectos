@@ -616,6 +616,49 @@
                             // Mostrar mensaje de éxito
                             alert(projectSuccessMessage);
                             
+                            // Actualizar la lista de proyectos manualmente
+                            window.updateProjectList = function() {
+                                const projectList = document.getElementById('project-list');
+                                if (projectList && window.projects) {
+                                    projectList.innerHTML = '';
+                                    window.projects.forEach(project => {
+                                        const projectItem = document.createElement('a');
+                                        projectItem.href = '#';
+                                        projectItem.className = 'block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100';
+                                        projectItem.setAttribute('role', 'menuitem');
+                                        projectItem.textContent = String(project.name); // Asegurar que sea string
+                                        projectItem.onclick = function(e) {
+                                            e.preventDefault();
+                                            window.activeProjectId = project.id;
+                                            console.log('✅ Project selected:', project.name);
+                                            // Actualizar el título del proyecto
+                                            const projectNameInput = document.getElementById('project-name-input');
+                                            if (projectNameInput) {
+                                                projectNameInput.value = String(project.name);
+                                            }
+                                            // Cerrar el menú
+                                            const projectMenu = document.getElementById('project-menu');
+                                            if (projectMenu) {
+                                                projectMenu.classList.add('hidden');
+                                            }
+                                            // Re-renderizar si hay función disponible
+                                            if (window.render) {
+                                                window.render();
+                                            } else if (window.renderApp) {
+                                                window.renderApp();
+                                            }
+                                        };
+                                        projectList.appendChild(projectItem);
+                                    });
+                                    console.log('✅ Project list updated');
+                                }
+                            };
+                            
+                            // Ejecutar actualización de lista
+                            if (typeof window.updateProjectList === 'function') {
+                                window.updateProjectList();
+                            }
+                            
                             // Cerrar el menú
                             const projectMenu = document.getElementById('project-menu');
                             if (projectMenu) {
@@ -1016,6 +1059,96 @@
                 editProgressInput.addEventListener('change', updateProgressValue);
                 console.log('✅ Edit progress listeners added');
             }
+            
+            // ===== EVENT LISTENER PARA GUARDAR CAMBIOS EN EDICIÓN =====
+            const editTaskForm = document.getElementById('edit-task-form');
+            if (editTaskForm) {
+                editTaskForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('📝 Edit form submitted');
+                    
+                    try {
+                        // Obtener datos del formulario
+                        const taskId = document.getElementById('edit-task-id')?.value;
+                        const taskName = document.getElementById('edit-task-name')?.value;
+                        const taskStart = document.getElementById('edit-task-start')?.value;
+                        const taskDuration = parseInt(document.getElementById('edit-task-duration')?.value) || 1;
+                        const taskType = document.getElementById('edit-task-type')?.value;
+                        const taskStatus = document.getElementById('edit-task-status')?.value;
+                        const taskProgress = parseInt(document.getElementById('edit-task-progress')?.value) || 0;
+                        
+                        console.log('📝 Edit form data:', {
+                            taskId, taskName, taskStart, taskDuration, taskType, taskStatus, taskProgress
+                        });
+                        
+                        if (!taskId || !taskName || !taskStart) {
+                            alert('❌ Faltan campos obligatorios');
+                            return;
+                        }
+                        
+                        // Buscar el proyecto activo y la tarea
+                        const activeProject = window.projects?.find(p => p.id == window.activeProjectId);
+                        if (!activeProject) {
+                            alert('❌ No hay proyecto activo');
+                            return;
+                        }
+                        
+                        const taskIndex = activeProject.tasks?.findIndex(t => t.id == taskId);
+                        if (taskIndex === -1 || taskIndex === undefined) {
+                            alert('❌ Tarea no encontrada');
+                            return;
+                        }
+                        
+                        // Calcular fecha de fin
+                        const startDate = new Date(taskStart);
+                        const endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + taskDuration - 1);
+                        
+                        // Actualizar la tarea
+                        const updatedTask = {
+                            ...activeProject.tasks[taskIndex],
+                            name: taskName,
+                            startDate: taskStart,
+                            duration: taskDuration,
+                            endDate: endDate.toISOString().split('T')[0],
+                            type: taskType,
+                            status: taskStatus,
+                            progress: taskProgress
+                        };
+                        
+                        // Guardar los cambios
+                        activeProject.tasks[taskIndex] = updatedTask;
+                        console.log('✅ Task updated:', updatedTask);
+                        
+                        // Guardar en Firebase
+                        if (window.saveProjects) {
+                            window.saveProjects();
+                        }
+                        
+                        // Cerrar modal
+                        const editModal = document.getElementById('edit-modal');
+                        if (editModal) {
+                            editModal.classList.add('hidden');
+                        }
+                        
+                        // Re-renderizar si hay función disponible
+                        if (window.render) {
+                            window.render();
+                        } else if (window.renderApp) {
+                            window.renderApp();
+                        }
+                        
+                        alert('✅ Tarea actualizada: ' + taskName);
+                        
+                    } catch (error) {
+                        console.error('❌ Error updating task:', error);
+                        alert('❌ Error al actualizar tarea: ' + error.message);
+                    }
+                });
+                console.log('✅ Edit task form listener added');
+            } else {
+                console.warn('⚠️ Edit task form not found');
+            }
         };
         
         console.log('✅ setupEventListeners function created in index.html:', typeof window.setupEventListeners);
@@ -1076,6 +1209,50 @@
         window.signOut = signOut;
         window.onAuthStateChanged = onAuthStateChanged;
         window.signInAnonymously = signInAnonymously;
+        
+        // Función para guardar proyectos en Firebase
+        window.saveProjects = async function() {
+            try {
+                if (!window.projects || !Array.isArray(window.projects)) {
+                    console.log('📁 No projects to save');
+                    return false;
+                }
+                
+                const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+                const user = window.firebaseAuth?.currentUser;
+                
+                if (!user) {
+                    console.log('❌ No authenticated user for saving projects');
+                    return false;
+                }
+                
+                // Limpiar datos antes de enviar
+                const cleanedProjects = window.projects.map(project => {
+                    const cleaned = JSON.parse(JSON.stringify(project));
+                    // Remover funciones y valores undefined
+                    Object.keys(cleaned).forEach(key => {
+                        if (typeof cleaned[key] === 'function' || cleaned[key] === undefined) {
+                            delete cleaned[key];
+                        }
+                    });
+                    return cleaned;
+                });
+                
+                const projectsRef = doc(window.firestoreDb, 'userProjects', user.uid);
+                await setDoc(projectsRef, {
+                    projects: cleanedProjects,
+                    lastUpdated: new Date().toISOString(),
+                    version: '1.0',
+                    userId: user.uid
+                });
+                
+                console.log('✅ Projects saved to Firebase successfully');
+                return true;
+            } catch (error) {
+                console.error('❌ Error saving projects:', error);
+                return false;
+            }
+        };
         
         console.log('✅ Firebase configurado correctamente con Auth');
         

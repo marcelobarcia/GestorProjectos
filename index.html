@@ -125,7 +125,31 @@
                                 // LLAMAR A LA FUNCIÓN REAL DE ELIMINAR
                                 if (window.deleteTask && typeof window.deleteTask === 'function') {
                                     console.log('📞 Calling window.deleteTask function');
-                                    window.deleteTask(taskId);
+                                    
+                                    // Obtener el proyecto activo
+                                    const activeProject = window.projects?.find(p => p.id === window.activeProjectId) || 
+                                                         window.activeProject || 
+                                                         { tasks: [] };
+                                    
+                                    console.log('🎯 Active project for deletion:', activeProject);
+                                    console.log('🗑️ Deleting task ID:', taskId);
+                                    
+                                    const result = window.deleteTask(activeProject, parseInt(taskId));
+                                    
+                                    if (result) {
+                                        console.log('✅ Task deleted successfully');
+                                        alert('🗑️ TAREA ELIMINADA CORRECTAMENTE');
+                                        
+                                        // Actualizar la interfaz
+                                        if (window.renderApp) {
+                                            window.renderApp();
+                                        } else if (window.updateGanttChart) {
+                                            window.updateGanttChart();
+                                        }
+                                    } else {
+                                        console.log('❌ Failed to delete task');
+                                        alert('❌ Error: No se pudo eliminar la tarea');
+                                    }
                                 } else if (window.TaskManager && window.TaskManager.deleteTask) {
                                     console.log('📞 Calling TaskManager.deleteTask');
                                     window.TaskManager.deleteTask(taskId);

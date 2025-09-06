@@ -89,6 +89,62 @@ function setupEventListeners() {
         });
     }
 
+    // Baseline selection change
+    if (window.baselineSelect) {
+        window.baselineSelect.addEventListener('change', (e) => {
+            const project = window.getActiveProject ? window.getActiveProject() : null;
+            if (project) {
+                project.selectedBaselineId = e.target.value ? parseInt(e.target.value) : null;
+                console.log('📊 Selected baseline changed to:', project.selectedBaselineId);
+                
+                // Actualizar el proyecto y guardar
+                if (window.updateProject) {
+                    window.updateProject(project);
+                }
+                
+                // Re-renderizar completamente para actualizar el gráfico
+                if (window.render) {
+                    console.log('🔄 Re-rendering Gantt chart with new baseline...');
+                    window.render();
+                }
+            }
+        });
+    }
+
+    // Baseline deletion
+    if (window.baselineListContainer) {
+        window.baselineListContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-baseline-btn');
+            const project = window.getActiveProject ? window.getActiveProject() : null;
+            if (btn && project) {
+                const baselineId = parseInt(btn.dataset.id);
+                const baseline = project.baselines.find(b => b.id === baselineId);
+                
+                if (baseline && window.modalManager) {
+                    window.modalManager.confirm(
+                        `¿Eliminar la línea base "${baseline.name}"?`,
+                        'Esta acción no se puede deshacer.',
+                        'Eliminar'
+                    ).then(confirmed => {
+                        if (confirmed) {
+                            project.baselines = project.baselines.filter(b => b.id !== baselineId);
+                            if (project.selectedBaselineId === baselineId) {
+                                project.selectedBaselineId = null;
+                            }
+                            
+                            if (window.updateProject) {
+                                window.updateProject(project);
+                            }
+                            
+                            if (window.render) window.render();
+                            window.showNotification('Línea base eliminada', 'info');
+                        }
+                    });
+                }
+            }
+        });
+    }
+
     // Resource management
     if (window.addResourceForm) {
         window.addResourceForm.addEventListener('submit', e => {

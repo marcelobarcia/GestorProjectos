@@ -1,6 +1,12 @@
 // Gantt Chart functions
 function renderChart(timelineStart, timelineEnd, totalWidth, project) {
-    ganttChartArea.innerHTML = '';
+    const chartArea = window.ganttChartArea;
+    if (!chartArea) {
+        console.error('❌ Gantt chart area not found');
+        return;
+    }
+    
+    chartArea.innerHTML = '';
     const chartWrapper = document.createElement('div');
     chartWrapper.className = 'relative w-full h-full';
     const rowHeight = 64; // Height for each task row
@@ -20,14 +26,15 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
     chartWrapper.appendChild(baselineWrapper);
 
     const activeBaseline = project.selectedBaselineId ? project.baselines.find(b => b.id === project.selectedBaselineId) : null;
+    console.log('📊 Active baseline for rendering:', activeBaseline ? activeBaseline.name : 'None');
     
     project.tasks.forEach((task, index) => {
         // Render baseline if exists
         if (activeBaseline) {
             const baselineTask = activeBaseline.tasks.find(bt => bt.id === task.id);
             if (baselineTask && !baselineTask.isMilestone && baselineTask.type !== 'phase') {
-                const baselineOffsetDays = (parseDate(baselineTask.start) - timelineStart) / (1000 * 3600 * 24);
-                const baselineDurationDays = (parseDate(baselineTask.end) - parseDate(baselineTask.start)) / (1000 * 3600 * 24) + 1;
+                const baselineOffsetDays = (window.parseDate(baselineTask.start) - timelineStart) / (1000 * 3600 * 24);
+                const baselineDurationDays = (window.parseDate(baselineTask.end) - window.parseDate(baselineTask.start)) / (1000 * 3600 * 24) + 1;
                 const baselineBar = document.createElement('div');
                 baselineBar.className = 'absolute h-2 bg-slate-400 rounded-sm opacity-80';
                 baselineBar.style.top = `${index * rowHeight + 44}px`;
@@ -38,7 +45,7 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
             }
         }
 
-        const offsetDays = (parseDate(task.start) - timelineStart) / (1000 * 3600 * 24);
+        const offsetDays = (window.parseDate(task.start) - timelineStart) / (1000 * 3600 * 24);
         const barTopPosition = index * rowHeight;
         
         if (task.isMilestone) {
@@ -62,7 +69,7 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
             chartWrapper.appendChild(milestoneContainer);
         } else {
             // Render regular task bar
-            const durationDays = (parseDate(task.end) - parseDate(task.start)) / (1000 * 3600 * 24) + 1;
+            const durationDays = (window.parseDate(task.end) - window.parseDate(task.start)) / (1000 * 3600 * 24) + 1;
             const bar = document.createElement('div');
             bar.dataset.taskId = task.id;
             bar.className = task.type === 'phase' ? 'gantt-phase-bar' : 'gantt-task-bar';
@@ -147,7 +154,7 @@ function renderChart(timelineStart, timelineEnd, totalWidth, project) {
     // Configurar drag and drop en el área del gráfico
     setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth, scale);
     
-    ganttChartArea.appendChild(chartWrapper);
+    chartArea.appendChild(chartWrapper);
 }
 
 function renderGanttConnections(chartWrapper, project) {
@@ -303,7 +310,7 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         if (task.predecessorId) {
             const predecessor = project.tasks.find(t => t.id === task.predecessorId);
             if (predecessor) {
-                const predecessorEndDate = parseDate(predecessor.end);
+                const predecessorEndDate = window.parseDate(predecessor.end);
                 if (newStartDate < predecessorEndDate) {
                     newStartDate.setTime(predecessorEndDate.getTime());
                     newStartDate.setDate(newStartDate.getDate() + 1);
@@ -313,13 +320,13 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         }
         
         // Calcular nueva fecha de fin manteniendo la duración
-        const currentDuration = (parseDate(task.end) - parseDate(task.start)) / (1000 * 3600 * 24);
+        const currentDuration = (window.parseDate(task.end) - window.parseDate(task.start)) / (1000 * 3600 * 24);
         const newEndDate = new Date(newStartDate);
         newEndDate.setDate(newEndDate.getDate() + currentDuration);
         
         // Formatear fechas
-        const newStart = formatDateForInput(newStartDate);
-        const newEnd = formatDateForInput(newEndDate);
+        const newStart = window.formatDateForInput(newStartDate);
+        const newEnd = window.formatDateForInput(newEndDate);
         
         console.log('📅 Nueva fecha:', newStart, 'a', newEnd);
         
@@ -335,7 +342,7 @@ function setupGanttDragAndDrop(chartWrapper, project, timelineStart, totalWidth,
         task.end = newEnd;
         
         // Mostrar notificación con más información
-        const daysMoved = Math.round((parseDate(newStart) - parseDate(oldStart)) / (1000 * 3600 * 24));
+        const daysMoved = Math.round((window.parseDate(newStart) - window.parseDate(oldStart)) / (1000 * 3600 * 24));
         const direction = daysMoved > 0 ? 'adelantada' : 'retrasada';
         showNotification(`"${task.name}" ${direction} ${Math.abs(daysMoved)} día(s)`, 'success');
         
@@ -388,7 +395,7 @@ function updateDropZoneIndicator(chartWrapper, dragEvent, timelineStart, scale) 
     const daysDiff = Math.round(dayPosition / scale);
     const targetDate = new Date(timelineStart);
     targetDate.setDate(targetDate.getDate() + daysDiff);
-    indicator.title = `Mover a: ${formatDateForInput(targetDate)}`;
+    indicator.title = `Mover a: ${window.formatDateForInput(targetDate)}`;
 }
 
 function removeDropZoneIndicator(chartWrapper) {
@@ -402,3 +409,4 @@ function removeDropZoneIndicator(chartWrapper) {
 window.renderChart = renderChart;
 window.createDropZoneIndicator = createDropZoneIndicator;
 window.removeDropZoneIndicator = removeDropZoneIndicator;
+window.formatDateForInput = formatDateForInput;

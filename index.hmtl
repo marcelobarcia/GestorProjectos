@@ -1070,21 +1070,23 @@
                 }
             });
 
-            baselineSelect.addEventListener('change', (e) => {
-                const project = getActiveProject(); if(project) { project.selectedBaselineId = e.target.value ? parseInt(e.target.value) : null; render(); }
-            });
+            // Baseline selection - handled in event-listeners.js
+            // baselineSelect.addEventListener('change', (e) => {
+            //     const project = getActiveProject(); if(project) { project.selectedBaselineId = e.target.value ? parseInt(e.target.value) : null; render(); }
+            // });
 
-            baselineListContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.delete-baseline-btn');
-                const project = getActiveProject();
-                if (btn && project) {
-                    project.baselines = project.baselines.filter(b => b.id !== parseInt(btn.dataset.id));
-                    if (project.selectedBaselineId === parseInt(btn.dataset.id)) {
-                        project.selectedBaselineId = null;
-                    }
-                    render();
-                }
-            });
+            // Baseline deletion - handled in event-listeners.js  
+            // baselineListContainer.addEventListener('click', (e) => {
+            //     const btn = e.target.closest('.delete-baseline-btn');
+            //     const project = getActiveProject();
+            //     if (btn && project) {
+            //         project.baselines = project.baselines.filter(b => b.id !== parseInt(btn.dataset.id));
+            //         if (project.selectedBaselineId === parseInt(btn.dataset.id)) {
+            //             project.selectedBaselineId = null;
+            //         }
+            //         render();
+            //     }
+            // });
 
             addResourceForm.addEventListener('submit', e => {
                 e.preventDefault();

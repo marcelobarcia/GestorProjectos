@@ -254,19 +254,69 @@
                                 console.log('✅ Name filled:', task.name);
                             }
                             
+                            // Llenar fecha de inicio
                             if (document.getElementById('edit-task-start')) {
                                 let startDate = task.startDate;
-                                if (startDate && !startDate.includes('-')) {
-                                    const date = new Date(startDate);
-                                    startDate = date.toISOString().split('T')[0];
+                                console.log('🔍 Original start date:', startDate, 'Type:', typeof startDate);
+                                
+                                if (startDate) {
+                                    // Si es un timestamp o número, convertir a Date
+                                    if (typeof startDate === 'number') {
+                                        startDate = new Date(startDate).toISOString().split('T')[0];
+                                    } else if (typeof startDate === 'string') {
+                                        // Si no tiene formato YYYY-MM-DD, intentar convertir
+                                        if (!startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                            const date = new Date(startDate);
+                                            if (!isNaN(date.getTime())) {
+                                                startDate = date.toISOString().split('T')[0];
+                                            }
+                                        }
+                                    }
                                 }
+                                
                                 document.getElementById('edit-task-start').value = startDate || '';
                                 console.log('✅ Start date filled:', startDate);
                             }
                             
+                            // Llenar duración
                             if (document.getElementById('edit-task-duration')) {
                                 document.getElementById('edit-task-duration').value = task.duration || 1;
                                 console.log('✅ Duration filled:', task.duration);
+                            }
+                            
+                            // Calcular y llenar fecha de fin
+                            if (document.getElementById('edit-task-end')) {
+                                let endDate = '';
+                                
+                                // Si la tarea ya tiene endDate, usarla
+                                if (task.endDate) {
+                                    if (typeof task.endDate === 'number') {
+                                        endDate = new Date(task.endDate).toISOString().split('T')[0];
+                                    } else if (typeof task.endDate === 'string') {
+                                        if (!task.endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                            const date = new Date(task.endDate);
+                                            if (!isNaN(date.getTime())) {
+                                                endDate = date.toISOString().split('T')[0];
+                                            }
+                                        } else {
+                                            endDate = task.endDate;
+                                        }
+                                    }
+                                } else {
+                                    // Calcular endDate basado en startDate + duration
+                                    const startDateValue = document.getElementById('edit-task-start').value;
+                                    const durationValue = parseInt(document.getElementById('edit-task-duration').value) || 1;
+                                    
+                                    if (startDateValue) {
+                                        const start = new Date(startDateValue);
+                                        const end = new Date(start);
+                                        end.setDate(start.getDate() + durationValue - 1);
+                                        endDate = end.toISOString().split('T')[0];
+                                    }
+                                }
+                                
+                                document.getElementById('edit-task-end').value = endDate;
+                                console.log('✅ End date filled/calculated:', endDate);
                             }
                             
                             if (document.getElementById('edit-task-type')) {
@@ -290,10 +340,38 @@
                                 document.getElementById('edit-task-id').value = taskId;
                             }
                             
+                            // Abrir el modal
                             if (editModalElement) {
                                 editModalElement.classList.remove('hidden');
                                 console.log('✅ Edit modal opened with task data');
                             }
+                            
+                            // Asegurar que el cálculo de fecha funcione después de llenar campos
+                            setTimeout(() => {
+                                if (window.calculateEditEndDate && typeof window.calculateEditEndDate === 'function') {
+                                    window.calculateEditEndDate();
+                                    console.log('✅ End date calculation triggered');
+                                } else {
+                                    // Función local de cálculo si no está disponible globalmente
+                                    const editStartInput = document.getElementById('edit-task-start');
+                                    const editDurationInput = document.getElementById('edit-task-duration');
+                                    const editEndInput = document.getElementById('edit-task-end');
+                                    
+                                    if (editStartInput && editDurationInput && editEndInput) {
+                                        const startDate = editStartInput.value;
+                                        const duration = parseInt(editDurationInput.value) || 1;
+                                        
+                                        if (startDate && duration > 0) {
+                                            const start = new Date(startDate);
+                                            const end = new Date(start);
+                                            end.setDate(start.getDate() + duration - 1);
+                                            const endDateString = end.toISOString().split('T')[0];
+                                            editEndInput.value = endDateString;
+                                            console.log('✅ Local end date calculation:', endDateString);
+                                        }
+                                    }
+                                }
+                            }, 100);
                             
                             console.log('✅ Modal cargado con datos:', task.name);
                         } catch (error) {
@@ -849,6 +927,9 @@
                     console.log('📅 Edit end date calculated:', endDateString);
                 }
             }
+            
+            // Hacer la función disponible globalmente
+            window.calculateEditEndDate = calculateEditEndDate;
             
             function updateProgressValue() {
                 const progress = editProgressInput?.value || 0;

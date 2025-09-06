@@ -96,7 +96,7 @@ function renderControls(project) {
 
 function renderBaselinesUI(project) {
     const baselineSelect = document.getElementById('baseline-select');
-    const baselineListContainer = document.getElementById('baseline-list');
+    const baselineListContainer = document.getElementById('baseline-list-container');
     
     if (!baselineSelect) {
         console.warn('⚠️ baseline-select element not found');
@@ -104,7 +104,7 @@ function renderBaselinesUI(project) {
     }
     
     if (!baselineListContainer) {
-        console.warn('⚠️ baseline-list element not found');
+        console.warn('⚠️ baseline-list-container element not found');
         return;
     }
     
@@ -114,7 +114,7 @@ function renderBaselinesUI(project) {
     
     // Verificar que existe el array de baselines
     if (!project.baselines || !Array.isArray(project.baselines)) {
-        console.warn('⚠️ project.baselines not available or not an array');
+        console.log('ℹ️ No baselines available for project');
         return;
     }
     
@@ -143,12 +143,14 @@ function renderBaselinesUI(project) {
     if (selectedBaseline) {
         console.log('📊 Currently viewing baseline:', selectedBaseline.name);
     }
+    
+    console.log('✅ Baselines UI rendered with', project.baselines.length, 'baselines');
 }
 
 function renderResourceList(project) {
-    const resourceListContainer = document.getElementById('resource-list');
+    const resourceListContainer = document.getElementById('resource-list-container');
     if (!resourceListContainer) {
-        console.warn('⚠️ resource-list element not found');
+        console.warn('⚠️ resource-list-container element not found');
         return;
     }
     
@@ -156,7 +158,7 @@ function renderResourceList(project) {
     
     // Verificar que existe el array de recursos
     if (!project.resources || !Array.isArray(project.resources)) {
-        console.warn('⚠️ project.resources not available or not an array');
+        console.log('ℹ️ No resources available for project');
         return;
     }
     
@@ -166,12 +168,13 @@ function renderResourceList(project) {
         el.innerHTML = `<div><p class="font-medium">${resource.name}</p><p class="text-xs text-slate-500">${resource.role}</p></div><button data-id="${resource.id}" class="delete-resource-btn text-slate-400 hover:text-red-500 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6m4-6v6"/></svg></button>`;
         resourceListContainer.appendChild(el);
     });
+    console.log('✅ Resource list rendered with', project.resources.length, 'resources');
 }
 
 function renderHolidayList(project) {
-    const holidayListContainer = document.getElementById('holiday-list');
+    const holidayListContainer = document.getElementById('holiday-list-container');
     if (!holidayListContainer) {
-        console.warn('⚠️ holiday-list element not found');
+        console.warn('⚠️ holiday-list-container element not found');
         return;
     }
     
@@ -179,7 +182,7 @@ function renderHolidayList(project) {
     
     // Verificar que existe el array de holidays
     if (!project.holidays || !Array.isArray(project.holidays)) {
-        console.warn('⚠️ project.holidays not available or not an array');
+        console.log('ℹ️ No holidays available for project');
         return;
     }
     
@@ -189,6 +192,7 @@ function renderHolidayList(project) {
         el.innerHTML = `<div><p class="font-medium">${h.name}</p><p class="text-xs text-slate-500">${h.date}</p></div><button data-date="${h.date}" class="delete-holiday-btn text-slate-400 hover:text-red-500 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6m4-6v6"/></svg></button>`;
         holidayListContainer.appendChild(el);
     });
+    console.log('✅ Holiday list rendered with', project.holidays.length, 'holidays');
 }
 
 function populateResourceDropdowns(project) {

@@ -669,7 +669,6 @@
             
             console.log('✅ Application started successfully');
         });
-        });
     </script>
 </body>
 </html>

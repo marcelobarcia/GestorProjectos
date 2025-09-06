@@ -1,9 +1,9 @@
 // Project Management functions
 function getActiveProject() {
-    if (!activeProjectId && projects.length > 0) {
-        activeProjectId = projects[0].id;
+    if (!window.activeProjectId && window.projects && window.projects.length > 0) {
+        window.activeProjectId = window.projects[0].id;
     }
-    return projects.find(p => p.id === activeProjectId);
+    return window.projects ? window.projects.find(p => p.id === window.activeProjectId) : null;
 }
 
 async function createProject(name, isDefault = false) {
@@ -39,19 +39,19 @@ async function createProject(name, isDefault = false) {
         lastModified: new Date().toISOString()
     };
 
-    projects.push(newProject);
-    activeProjectId = newProject.id;
+    window.projects.push(newProject);
+    window.activeProjectId = newProject.id;
     
     console.log('✅ Project created:', newProject.name, 'ID:', newProject.id);
-    console.log('🎯 Active project set to:', activeProjectId);
+    console.log('🎯 Active project set to:', window.activeProjectId);
     
     // Guardar en Firebase
     await saveProjectsToFirebase();
     
     // Re-renderizar para actualizar la UI
-    if (typeof render === 'function') {
+    if (typeof window.render === 'function') {
         console.log('🔄 Calling render() after project creation');
-        render();
+        window.render();
     } else {
         console.warn('⚠️ render function not available');
     }
@@ -62,19 +62,19 @@ async function createProject(name, isDefault = false) {
 }
 
 async function deleteProject(projectId) {
-    const project = projects.find(p => p.id === projectId);
+    const project = window.projects.find(p => p.id === projectId);
     if (!project) return false;
     
     // Eliminar de la lista local
-    projects = projects.filter(p => p.id !== projectId);
+    window.projects = window.projects.filter(p => p.id !== projectId);
     
     // Eliminar de Firebase
-    await firebaseManager.deleteProject(projectId);
+    await window.firebaseManager.deleteProject(projectId);
     await saveProjectsToFirebase();
     
     // Ajustar proyecto activo
-    if (activeProjectId === projectId) {
-        activeProjectId = projects.length > 0 ? projects[0].id : null;
+    if (window.activeProjectId === projectId) {
+        window.activeProjectId = window.projects.length > 0 ? window.projects[0].id : null;
     }
     
     // Re-renderizar para actualizar la UI
@@ -90,9 +90,9 @@ async function updateProject(project) {
     project.lastModified = new Date().toISOString();
     
     // Actualizar en la lista local
-    const index = projects.findIndex(p => p.id === project.id);
+    const index = window.projects.findIndex(p => p.id === project.id);
     if (index !== -1) {
-        projects[index] = project;
+        window.projects[index] = project;
     }
     
     // Guardar en Firebase
@@ -100,13 +100,13 @@ async function updateProject(project) {
     
     // Auto-backup cada 10 cambios (opcional)
     if (Math.random() < 0.1) { // 10% de probabilidad
-        await firebaseManager.createBackup();
+        await window.firebaseManager.createBackup();
     }
 }
 
 async function saveProjectsToFirebase() {
     try {
-        const success = await firebaseManager.saveProjects(projects);
+        const success = await window.firebaseManager.saveProjects(window.projects);
         if (success) {
             updateConnectionStatus(true);
         } else {
@@ -123,13 +123,13 @@ async function saveProjectsToFirebase() {
 async function loadProjectsFromFirebase() {
     try {
         showNotification('Cargando proyectos desde Firebase...', 'info');
-        const loadedProjects = await firebaseManager.loadProjects();
+        const loadedProjects = await window.firebaseManager.loadProjects();
         
         if (loadedProjects && loadedProjects.length > 0) {
             console.log('📦 Loaded projects from Firebase:', loadedProjects.length);
-            projects = loadedProjects;
-            if (!activeProjectId && projects.length > 0) {
-                activeProjectId = projects[0].id;
+            window.projects = loadedProjects;
+            if (!window.activeProjectId && window.projects.length > 0) {
+                window.activeProjectId = window.projects[0].id;
             }
             updateConnectionStatus(true);
             showNotification('Proyectos cargados desde Firebase', 'success');
@@ -137,8 +137,8 @@ async function loadProjectsFromFirebase() {
         } else {
             // Si no hay proyectos en Firebase para este usuario, limpiar estado
             console.log('📝 No projects in Firebase for this user');
-            projects = []; // Limpiar proyectos existentes
-            activeProjectId = null;
+            window.projects = []; // Limpiar proyectos existentes
+            window.activeProjectId = null;
             
             updateConnectionStatus(true);
             // NO crear proyecto demo aquí - dejar que initializeApp() lo haga

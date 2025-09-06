@@ -1,13 +1,13 @@
 // Main application functions
 function render() {
     console.log('🎨 Rendering app...', {
-        projects: projects.length,
-        activeProjectId,
-        currentView,
-        isAuthenticated: authManager ? authManager.isAuthenticated() : false
+        projects: window.projects ? window.projects.length : 0,
+        activeProjectId: window.activeProjectId,
+        currentView: window.currentView,
+        isAuthenticated: window.authManager ? window.authManager.isAuthenticated() : false
     });
     
-    const project = getActiveProject();
+    const project = window.getActiveProject ? window.getActiveProject() : null;
     
     console.log('📊 Render state:', { 
         project: project ? project.name : 'none',
@@ -16,28 +16,44 @@ function render() {
     
     if (!project) {
         console.log('👋 No project - showing welcome/no project view');
-        mainContent.classList.add('hidden');
-        noProjectView.classList.remove('hidden');
+        const mainContent = document.getElementById('main-content');
+        const noProjectView = document.getElementById('no-project-view');
+        if (mainContent) mainContent.classList.add('hidden');
+        if (noProjectView) noProjectView.classList.remove('hidden');
         return;
     }
     
     console.log('✅ Has project - showing main content');
-    mainContent.classList.remove('hidden');
-    noProjectView.classList.add('hidden');
+    const mainContent = document.getElementById('main-content');
+    const noProjectView = document.getElementById('no-project-view');
+    if (mainContent) mainContent.classList.remove('hidden');
+    if (noProjectView) noProjectView.classList.add('hidden');
     
-    calculateProjectSchedule(project);
-    calculateCriticalPath(project);
-    project.tasks.sort((a, b) => parseDate(a.start) - parseDate(b.start) || (a.isMilestone ? -1 : 1));
+    // Usar funciones globales con verificación
+    if (window.calculateProjectSchedule) window.calculateProjectSchedule(project);
+    if (window.calculateCriticalPath) window.calculateCriticalPath(project);
     
-    renderProjectUI(project);
-    renderControls(project);
-    renderResourceList(project);
-    populateResourceDropdowns(project);
-    populatePredecessorDropdown(document.getElementById('task-predecessor'), project);
-    renderHolidayList(project);
-    renderBaselinesUI(project);
-    renderGantt(project);
-    renderDashboard(project);
+    project.tasks.sort((a, b) => {
+        const dateA = window.parseDate ? window.parseDate(a.start) : new Date(a.start);
+        const dateB = window.parseDate ? window.parseDate(b.start) : new Date(b.start);
+        return dateA - dateB || (a.isMilestone ? -1 : 1);
+    });
+    
+    // Renderizar componentes usando funciones globales
+    if (window.renderProjectUI) window.renderProjectUI(project);
+    if (window.renderControls) window.renderControls(project);
+    if (window.renderResourceList) window.renderResourceList(project);
+    if (window.populateResourceDropdowns) window.populateResourceDropdowns(project);
+    
+    const predecessorSelect = document.getElementById('task-predecessor');
+    if (predecessorSelect && window.populatePredecessorDropdown) {
+        window.populatePredecessorDropdown(predecessorSelect, project);
+    }
+    
+    if (window.renderHolidayList) window.renderHolidayList(project);
+    if (window.renderBaselinesUI) window.renderBaselinesUI(project);
+    if (window.renderGantt) window.renderGantt(project);
+    if (window.renderDashboard) window.renderDashboard(project);
     
     // Auto-save to Firebase when rendering (debounced)
     debounceAutoSave();
@@ -51,9 +67,9 @@ let autoSaveTimeout;
 function debounceAutoSave() {
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(async () => {
-        const project = getActiveProject();
-        if (project) {
-            await updateProject(project);
+        const project = window.getActiveProject ? window.getActiveProject() : null;
+        if (project && window.updateProject) {
+            await window.updateProject(project);
         }
     }, 2000); // Auto-save after 2 seconds of inactivity
 }
@@ -64,18 +80,22 @@ async function initializeApp() {
     
     // Verificar que las variables globales estén en estado limpio
     console.log('📊 Initial state check:', {
-        projectsCount: projects ? projects.length : 'undefined',
-        activeProjectId: activeProjectId,
-        isAuthenticated: authManager ? authManager.isAuthenticated() : false
+        projectsCount: window.projects ? window.projects.length : 'undefined',
+        activeProjectId: window.activeProjectId,
+        isAuthenticated: window.authManager ? window.authManager.isAuthenticated() : false
     });
     
     // Asegurar que las variables estén inicializadas
-    if (typeof projects === 'undefined') {
+    if (!window.projects) {
         window.projects = [];
     }
-    if (typeof activeProjectId === 'undefined') {
+    if (!window.activeProjectId) {
         window.activeProjectId = null;
     }
+    
+    // Crear referencias locales
+    const projects = window.projects;
+    let activeProjectId = window.activeProjectId;
     
     // Agregar indicador de estado de Firebase
     addFirebaseStatusIndicator();
@@ -96,16 +116,17 @@ async function initializeApp() {
     
     // Asegurar que hay un proyecto activo
     if (!activeProjectId && projects.length > 0) {
-        activeProjectId = projects[0].id;
+        window.activeProjectId = projects[0].id;
+        activeProjectId = window.activeProjectId;
         console.log('✅ Set active project:', activeProjectId);
     }
     
     console.log('🎯 Final state - Projects:', projects.length, 'Active:', activeProjectId);
     
     // Asegurar que los event listeners están configurados
-    if (typeof setupEventListeners === 'function') {
+    if (typeof window.setupEventListeners === 'function') {
         console.log('🔗 Setting up event listeners...');
-        setupEventListeners();
+        window.setupEventListeners();
     } else {
         console.warn('⚠️ setupEventListeners function not found');
     }
@@ -119,8 +140,8 @@ async function initializeApp() {
     // Auto-backup cada 30 minutos (solo configurar una vez)
     if (!window.autoBackupConfigured) {
         setInterval(async () => {
-            if (projects.length > 0) {
-                await firebaseManager.createBackup();
+            if (window.projects.length > 0) {
+                await window.firebaseManager.createBackup();
                 console.log('Auto-backup created');
             }
         }, 30 * 60 * 1000); // 30 minutos

@@ -14,7 +14,16 @@ const VIEW_CONFIGS = {
     year: { unitWidth: 350 } 
 };
 
-// Variables globales
-let projects = [];
-let activeProjectId = null;
-let currentView = 'month'; // Vista actual del Gantt (day, week, month, year)
+// Variables globales - exponer en window para acceso global
+window.projects = [];
+window.activeProjectId = null;
+window.currentView = 'month'; // Vista actual del Gantt (day, week, month, year)
+
+// También crear referencias locales para compatibilidad
+let projects = window.projects;
+let activeProjectId = window.activeProjectId;
+let currentView = window.currentView;
+
+// Exponer constantes globalmente
+window.STATUS_COLORS = STATUS_COLORS;
+window.VIEW_CONFIGS = VIEW_CONFIGS;

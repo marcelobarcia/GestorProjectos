@@ -344,12 +344,17 @@
                     console.log('🆕 NEW PROJECT BUTTON CLICKED');
                     
                     const projectName = prompt('Nombre del nuevo proyecto:');
-                    if (projectName && projectName.trim()) {
+                    console.log('📝 Project name entered:', projectName, 'Type:', typeof projectName);
+                    
+                    if (projectName !== null && projectName !== undefined && String(projectName).trim() !== '') {
                         try {
+                            const trimmedName = String(projectName).trim();
+                            console.log('✅ Valid project name:', trimmedName);
+                            
                             // Crear nuevo proyecto directamente
                             const newProject = {
                                 id: Date.now(),
-                                name: projectName.trim(),
+                                name: trimmedName,
                                 tasks: [],
                                 resources: [],
                                 baselines: [],
@@ -377,7 +382,7 @@
                                 window.renderApp();
                             }
                             
-                            alert('🆕 PROYECTO CREADO: ' + projectName);
+                            alert('🆕 PROYECTO CREADO: ' + trimmedName);
                             
                             // Cerrar el menú
                             const projectMenu = document.getElementById('project-menu');
@@ -389,8 +394,13 @@
                             console.error('❌ Error creating project:', error);
                             alert('❌ Error al crear proyecto: ' + error.message);
                         }
-                    } else if (projectName !== null) {
-                        alert('❌ El nombre del proyecto no puede estar vacío');
+                    } else {
+                        if (projectName !== null) {
+                            console.log('❌ Invalid project name');
+                            alert('❌ El nombre del proyecto no puede estar vacío');
+                        } else {
+                            console.log('ℹ️ User cancelled project creation');
+                        }
                     }
                 });
                 console.log('✅ New project button listener configured');

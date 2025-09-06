@@ -220,6 +220,113 @@
                 console.log('✅ Cancel edit listener configured');
             }
             
+            // ===== BOTONES DE PROYECTOS =====
+            
+            // Botón del menú de proyectos
+            const projectMenuBtn = document.getElementById('project-menu-btn');
+            if (projectMenuBtn) {
+                projectMenuBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📂 PROJECT MENU BUTTON CLICKED');
+                    
+                    const projectMenu = document.getElementById('project-menu');
+                    if (projectMenu) {
+                        const isHidden = projectMenu.classList.contains('hidden');
+                        
+                        if (isHidden) {
+                            projectMenu.classList.remove('hidden');
+                            console.log('✅ Project menu opened');
+                            alert('📂 MENÚ DE PROYECTOS ABIERTO');
+                        } else {
+                            projectMenu.classList.add('hidden');
+                            console.log('✅ Project menu closed');
+                        }
+                    } else {
+                        alert('❌ No se encontró el menú de proyectos');
+                    }
+                });
+                console.log('✅ Project menu button listener configured');
+            } else {
+                console.log('❌ project-menu-btn not found');
+            }
+            
+            // Botón de nuevo proyecto
+            const newProjectBtn = document.getElementById('new-project-btn');
+            if (newProjectBtn) {
+                newProjectBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🆕 NEW PROJECT BUTTON CLICKED');
+                    
+                    const projectName = prompt('Nombre del nuevo proyecto:');
+                    if (projectName && projectName.trim()) {
+                        try {
+                            // Crear nuevo proyecto directamente
+                            const newProject = {
+                                id: Date.now(),
+                                name: projectName.trim(),
+                                tasks: [],
+                                resources: [],
+                                baselines: [],
+                                selectedBaselineId: null,
+                                currentGanttView: 'day',
+                                createdAt: new Date().toISOString()
+                            };
+                            
+                            // Agregar a la lista de proyectos
+                            if (!window.projects) {
+                                window.projects = [];
+                            }
+                            window.projects.push(newProject);
+                            window.activeProjectId = newProject.id;
+                            
+                            console.log('✅ New project created:', newProject);
+                            
+                            // Guardar en Firebase
+                            if (window.saveProjects) {
+                                window.saveProjects();
+                            }
+                            
+                            // Actualizar interfaz
+                            if (window.renderApp) {
+                                window.renderApp();
+                            }
+                            
+                            alert('🆕 PROYECTO CREADO: ' + projectName);
+                            
+                            // Cerrar el menú
+                            const projectMenu = document.getElementById('project-menu');
+                            if (projectMenu) {
+                                projectMenu.classList.add('hidden');
+                            }
+                            
+                        } catch (error) {
+                            console.error('❌ Error creating project:', error);
+                            alert('❌ Error al crear proyecto: ' + error.message);
+                        }
+                    } else if (projectName !== null) {
+                        alert('❌ El nombre del proyecto no puede estar vacío');
+                    }
+                });
+                console.log('✅ New project button listener configured');
+            } else {
+                console.log('❌ new-project-btn not found');
+            }
+            
+            // Cerrar menú al hacer click fuera
+            document.addEventListener('click', function(e) {
+                const projectMenu = document.getElementById('project-menu');
+                const projectMenuBtn = document.getElementById('project-menu-btn');
+                
+                if (projectMenu && !projectMenu.classList.contains('hidden')) {
+                    if (!projectMenu.contains(e.target) && !projectMenuBtn.contains(e.target)) {
+                        projectMenu.classList.add('hidden');
+                        console.log('✅ Project menu closed by outside click');
+                    }
+                }
+            });
+            
             console.log('🚀 setupEventListeners COMPLETED SUCCESSFULLY!');
         };
         

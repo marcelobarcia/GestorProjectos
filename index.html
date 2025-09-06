@@ -219,14 +219,41 @@
                                 }
                                 
                                 if (editTaskStart) {
-                                    // Asegurar formato correcto de fecha
+                                    // Mejorar el manejo de fechas de inicio
                                     let startDate = task.startDate;
-                                    if (startDate && !startDate.includes('-')) {
-                                        // Convertir formato si es necesario
-                                        const date = new Date(startDate);
-                                        startDate = date.toISOString().split('T')[0];
+                                    console.log('🔍 Original start date:', startDate, 'Type:', typeof startDate);
+                                    
+                                    if (startDate) {
+                                        try {
+                                            // Si no es un formato YYYY-MM-DD, convertir
+                                            if (typeof startDate === 'string' && !startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                                const dateObj = new Date(startDate);
+                                                if (!isNaN(dateObj.getTime())) {
+                                                    startDate = dateObj.toISOString().split('T')[0];
+                                                } else {
+                                                    console.warn('⚠️ Invalid start date, using current date');
+                                                    startDate = new Date().toISOString().split('T')[0];
+                                                }
+                                            } else if (typeof startDate !== 'string') {
+                                                // Si no es string, convertir a fecha
+                                                const dateObj = new Date(startDate);
+                                                if (!isNaN(dateObj.getTime())) {
+                                                    startDate = dateObj.toISOString().split('T')[0];
+                                                } else {
+                                                    startDate = new Date().toISOString().split('T')[0];
+                                                }
+                                            }
+                                        } catch (error) {
+                                            console.error('❌ Error processing start date:', error);
+                                            startDate = new Date().toISOString().split('T')[0];
+                                        }
+                                    } else {
+                                        // Si no hay fecha, usar la fecha actual
+                                        startDate = new Date().toISOString().split('T')[0];
+                                        console.log('ℹ️ No start date found, using current date');
                                     }
-                                    editTaskStart.value = startDate || '';
+                                    
+                                    editTaskStart.value = startDate;
                                     console.log('✅ Start date filled:', startDate);
                                 }
                                 
@@ -261,24 +288,54 @@
                                     console.log('✅ Task ID filled:', taskId);
                                 }
                                 
-                                // Calcular fecha de fin
+                                // Calcular y llenar fecha de fin
                                 if (editTaskStart && editTaskDuration && editTaskEnd) {
                                     const startDate = editTaskStart.value;
-                                    const duration = parseInt(editTaskDuration.value) || 0;
+                                    const duration = parseInt(editTaskDuration.value) || 1;
+                                    
+                                    console.log('🔢 Calculating end date with:', { startDate, duration });
                                     
                                     if (startDate && duration > 0) {
-                                        const start = new Date(startDate);
-                                        const end = new Date(start);
-                                        end.setDate(start.getDate() + duration - 1);
-                                        const endDateString = end.toISOString().split('T')[0];
-                                        editTaskEnd.value = endDateString;
-                                        console.log('✅ End date calculated:', endDateString);
+                                        try {
+                                            const start = new Date(startDate);
+                                            const end = new Date(start);
+                                            end.setDate(start.getDate() + duration - 1);
+                                            const endDateString = end.toISOString().split('T')[0];
+                                            editTaskEnd.value = endDateString;
+                                            console.log('✅ End date calculated and filled:', endDateString);
+                                        } catch (error) {
+                                            console.error('❌ Error calculating end date:', error);
+                                            // Fallback: usar fecha de fin de la tarea si existe
+                                            if (task.endDate) {
+                                                let endDate = task.endDate;
+                                                if (typeof endDate !== 'string' || !endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                                    const dateObj = new Date(endDate);
+                                                    if (!isNaN(dateObj.getTime())) {
+                                                        endDate = dateObj.toISOString().split('T')[0];
+                                                    }
+                                                }
+                                                editTaskEnd.value = endDate;
+                                                console.log('✅ Used original end date:', endDate);
+                                            }
+                                        }
+                                    } else {
+                                        console.warn('⚠️ Cannot calculate end date: invalid start date or duration');
                                     }
+                                } else {
+                                    console.warn('⚠️ Missing elements for end date calculation');
                                 }
                                 
                                 if (editModal) {
-                                    editModal.classList.remove('hidden');
-                                    console.log('✅ Edit modal opened with task data');
+                                    // Usar la nueva función para llenar el modal
+                                    if (window.fillEditModal && window.fillEditModal(task)) {
+                                        editModal.classList.remove('hidden');
+                                        console.log('✅ Edit modal opened with task data using fillEditModal');
+                                    } else {
+                                        console.error('❌ Failed to fill edit modal');
+                                        alert('❌ Error al cargar datos de la tarea');
+                                    }
+                                } else {
+                                    console.error('❌ Edit modal not found');
                                 }
                                 
                             if (!task) {
@@ -1590,6 +1647,116 @@
             if (window.updateBaselineList) {
                 window.updateBaselineList();
                 console.log('✅ Baseline list synced');
+            }
+        };
+        
+        // ===== FUNCIÓN PARA LLENAR MODAL DE EDICIÓN =====
+        
+        window.fillEditModal = function(task) {
+            console.log('📝 Filling edit modal with task:', task);
+            
+            try {
+                // Obtener todos los elementos del modal
+                const editTaskName = document.getElementById('edit-task-name');
+                const editTaskStart = document.getElementById('edit-task-start');
+                const editTaskDuration = document.getElementById('edit-task-duration');
+                const editTaskEnd = document.getElementById('edit-task-end');
+                const editTaskType = document.getElementById('edit-task-type');
+                const editTaskStatus = document.getElementById('edit-task-status');
+                const editTaskProgress = document.getElementById('edit-task-progress');
+                const editProgressValue = document.getElementById('edit-progress-value');
+                const editTaskId = document.getElementById('edit-task-id');
+                
+                // Llenar ID
+                if (editTaskId) {
+                    editTaskId.value = task.id;
+                    console.log('✅ Task ID filled:', task.id);
+                }
+                
+                // Llenar nombre
+                if (editTaskName) {
+                    editTaskName.value = task.name || '';
+                    console.log('✅ Task name filled:', task.name);
+                }
+                
+                // Llenar fecha de inicio con validación robusta
+                if (editTaskStart) {
+                    let startDate = task.startDate;
+                    if (startDate) {
+                        try {
+                            const dateObj = new Date(startDate);
+                            if (!isNaN(dateObj.getTime())) {
+                                startDate = dateObj.toISOString().split('T')[0];
+                            } else {
+                                startDate = new Date().toISOString().split('T')[0];
+                            }
+                        } catch (error) {
+                            console.error('Error parsing start date:', error);
+                            startDate = new Date().toISOString().split('T')[0];
+                        }
+                    } else {
+                        startDate = new Date().toISOString().split('T')[0];
+                    }
+                    editTaskStart.value = startDate;
+                    console.log('✅ Start date filled:', startDate);
+                }
+                
+                // Llenar duración
+                if (editTaskDuration) {
+                    editTaskDuration.value = task.duration || 1;
+                    console.log('✅ Duration filled:', task.duration);
+                }
+                
+                // Llenar tipo
+                if (editTaskType) {
+                    editTaskType.value = task.type || 'task';
+                    console.log('✅ Type filled:', task.type);
+                }
+                
+                // Llenar estado
+                if (editTaskStatus) {
+                    editTaskStatus.value = task.status || 'Pendiente';
+                    console.log('✅ Status filled:', task.status);
+                }
+                
+                // Llenar progreso
+                if (editTaskProgress) {
+                    const progressValue = task.progress || 0;
+                    editTaskProgress.value = progressValue;
+                    console.log('✅ Progress filled:', progressValue);
+                    
+                    if (editProgressValue) {
+                        editProgressValue.textContent = progressValue;
+                    }
+                }
+                
+                // Calcular fecha de fin después de llenar los campos
+                setTimeout(() => {
+                    if (editTaskStart && editTaskDuration && editTaskEnd) {
+                        const startDateValue = editTaskStart.value;
+                        const durationValue = parseInt(editTaskDuration.value) || 1;
+                        
+                        if (startDateValue && durationValue > 0) {
+                            try {
+                                const start = new Date(startDateValue);
+                                const end = new Date(start);
+                                end.setDate(start.getDate() + durationValue - 1);
+                                const endDateString = end.toISOString().split('T')[0];
+                                editTaskEnd.value = endDateString;
+                                console.log('✅ End date calculated:', endDateString);
+                            } catch (error) {
+                                console.error('Error calculating end date:', error);
+                            }
+                        }
+                    }
+                }, 100);
+                
+                console.log('✅ Edit modal filled successfully');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Error filling edit modal:', error);
+                return false;
             }
         };
         

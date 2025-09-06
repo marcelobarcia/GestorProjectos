@@ -135,17 +135,14 @@ async function loadProjectsFromFirebase() {
             showNotification('Proyectos cargados desde Firebase', 'success');
             return true;
         } else {
-            // Si no hay proyectos en Firebase para este usuario, crear proyecto demo
-            console.log('🆕 No projects in Firebase for this user, creating demo project');
+            // Si no hay proyectos en Firebase para este usuario, limpiar estado
+            console.log('📝 No projects in Firebase for this user');
             projects = []; // Limpiar proyectos existentes
             activeProjectId = null;
             
-            // Crear proyecto demo automáticamente para usuarios nuevos
-            const demoProject = await createProject('Proyecto Demo', true);
-            
             updateConnectionStatus(true);
-            showNotification('Proyecto demo creado para nuevo usuario', 'success');
-            return true;
+            // NO crear proyecto demo aquí - dejar que initializeApp() lo haga
+            return false;
         }
     } catch (error) {
         console.error('Error loading from Firebase:', error);

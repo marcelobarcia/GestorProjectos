@@ -1,5 +1,19 @@
 // Event Listeners
+let eventListenersSetup = false; // Flag para evitar duplicación
+
+function resetEventListeners() {
+    console.log('🔄 Resetting event listeners flag...');
+    eventListenersSetup = false;
+}
+
 function setupEventListeners() {
+    if (eventListenersSetup) {
+        console.log('📌 Event listeners already setup, skipping...');
+        return;
+    }
+    
+    console.log('🔗 Setting up event listeners...');
+    
     // Project menu handling
     projectMenuBtn.addEventListener('click', () => projectMenu.classList.toggle('hidden'));
     document.addEventListener('click', (e) => { 
@@ -250,4 +264,7 @@ function setupEventListeners() {
             document.getElementById(`${btn.dataset.view}-view`).classList.remove('hidden');
         }
     });
+    
+    eventListenersSetup = true;
+    console.log('✅ Event listeners setup completed');
 }

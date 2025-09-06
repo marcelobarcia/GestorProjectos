@@ -57,7 +57,7 @@ function debounceAutoSave() {
 
 // Application initialization
 async function initializeApp() {
-    console.log('🚀 Initializing app...');
+    console.log('🚀 Initializing app for user...');
     
     // Agregar indicador de estado de Firebase
     addFirebaseStatusIndicator();
@@ -73,7 +73,7 @@ async function initializeApp() {
     
     // Si no se cargaron proyectos desde Firebase, crear proyecto demo
     if (!loadedFromFirebase && projects.length === 0) {
-        console.log('🆕 Creating demo project...');
+        console.log('🆕 Creating demo project for new user...');
         await createProject('Proyecto Demo', true);
     }
     
@@ -85,8 +85,17 @@ async function initializeApp() {
     
     console.log('🎯 Final state - Projects:', projects.length, 'Active:', activeProjectId);
     
-    setupEventListeners();
+    // Asegurar que los event listeners están configurados
+    if (typeof setupEventListeners === 'function') {
+        console.log('🔗 Setting up event listeners...');
+        setupEventListeners();
+    }
+    
+    // Renderizar la interfaz
+    console.log('🎨 About to render interface...');
     render();
+    
+    console.log('✅ App initialization completed');
     
     // Auto-backup cada 30 minutos
     setInterval(async () => {

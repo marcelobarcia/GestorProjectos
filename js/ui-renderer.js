@@ -26,6 +26,12 @@ function updateProjectDropdown() {
     const projectListElement = document.getElementById('project-list');
     const projectMenuElement = document.getElementById('project-menu');
     
+    console.log('🔄 Updating project dropdown...', {
+        projects: projects.length,
+        activeProjectId,
+        hasProjectListElement: !!projectListElement
+    });
+    
     if (!projectListElement) {
         console.warn('⚠️ project-list element not found');
         return;
@@ -33,6 +39,7 @@ function updateProjectDropdown() {
     
     projectListElement.innerHTML = '';
     projects.forEach(p => {
+        console.log('📝 Adding project to dropdown:', p.name, 'ID:', p.id);
         const item = document.createElement('a');
         item.href = '#';
         item.dataset.id = p.id;
@@ -55,6 +62,8 @@ function updateProjectDropdown() {
         };
         projectListElement.appendChild(item);
     });
+    
+    console.log('✅ Project dropdown updated with', projects.length, 'projects');
 }
 
 function renderControls(project) {

@@ -273,6 +273,11 @@ class AuthManager {
             // Limpiar datos del usuario actual antes de cerrar sesión
             this.clearPreviousUserData();
             
+            // Resetear event listeners para el próximo usuario
+            if (typeof resetEventListeners === 'function') {
+                resetEventListeners();
+            }
+            
             await window.signOut(window.firebaseAuth);
             localStorage.removeItem('userSession');
             window.currentUser = null;

@@ -13,8 +13,32 @@ class ExportManager {
     // Obtener datos actuales del proyecto
     getCurrentProjectData() {
         const projectName = document.getElementById('project-name-input')?.value || 'Mi Proyecto';
-        const tasks = window.currentProject?.tasks || [];
-        const resources = window.currentProject?.resources || [];
+        
+        // Intentar obtener el proyecto activo con múltiples métodos
+        let activeProject = null;
+        
+        // Método 1: Usar la función getActiveProject() si está disponible
+        if (typeof getActiveProject === 'function') {
+            activeProject = getActiveProject();
+        }
+        
+        // Método 2: Usar variables globales como fallback
+        if (!activeProject && typeof projects !== 'undefined' && typeof activeProjectId !== 'undefined') {
+            activeProject = projects.find(p => p.id === activeProjectId);
+        }
+        
+        // Método 3: Tomar el primer proyecto disponible
+        if (!activeProject && typeof projects !== 'undefined' && projects.length > 0) {
+            activeProject = projects[0];
+        }
+        
+        const tasks = activeProject?.tasks || [];
+        const resources = activeProject?.resources || [];
+        
+        // Debug: mostrar información del proyecto activo
+        console.log('Método de exportación - Proyecto activo:', activeProject);
+        console.log('Tareas encontradas:', tasks);
+        console.log('Recursos encontrados:', resources);
         
         return {
             projectName,
@@ -28,22 +52,48 @@ class ExportManager {
     prepareTaskDataForExport() {
         const { tasks, resources } = this.getCurrentProjectData();
         
+        if (!tasks || tasks.length === 0) {
+            console.warn('No hay tareas para exportar');
+            return [];
+        }
+        
         return tasks.map(task => {
             const resource = resources.find(r => r.id === task.resourceId);
-            const startDate = new Date(task.startDate);
-            const endDate = new Date(task.endDate);
+            
+            // Manejar diferentes formatos de fecha
+            let startDate, endDate;
+            
+            if (task.startDate) {
+                startDate = new Date(task.startDate);
+            } else if (task.start) {
+                startDate = new Date(task.start);
+            } else {
+                startDate = new Date();
+            }
+            
+            if (task.endDate) {
+                endDate = new Date(task.endDate);
+            } else if (task.end) {
+                endDate = new Date(task.end);
+            } else {
+                // Calcular fecha de fin basada en duración
+                endDate = new Date(startDate);
+                const duration = task.duration || 1;
+                endDate.setDate(startDate.getDate() + duration - 1);
+            }
+            
             const duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             
             return {
-                'Nombre': task.name,
-                'Tipo': task.type === 'task' ? 'Actividad' : 'Fase',
+                'Nombre': task.name || 'Sin nombre',
+                'Tipo': task.type === 'task' ? 'Actividad' : task.type === 'phase' ? 'Fase' : 'Elemento',
                 'Fecha Inicio': startDate.toLocaleDateString('es-ES'),
                 'Fecha Fin': endDate.toLocaleDateString('es-ES'),
                 'Duración (días)': duration,
                 'Progreso (%)': task.progress || 0,
                 'Estado': task.status || 'Pendiente',
                 'Recurso Asignado': resource?.name || 'Sin asignar',
-                'Es Hito': task.milestone ? 'Sí' : 'No',
+                'Es Hito': (task.milestone || task.isMilestone) ? 'Sí' : 'No',
                 'Predecesora': task.predecessorId ? tasks.find(t => t.id === task.predecessorId)?.name || '' : ''
             };
         });
@@ -54,6 +104,18 @@ class ExportManager {
         try {
             const { projectName, resources, exportDate } = this.getCurrentProjectData();
             const taskData = this.prepareTaskDataForExport();
+
+            console.log('Datos del proyecto para exportar:', {
+                projectName,
+                resources: resources.length,
+                tasks: taskData.length,
+                taskData: taskData
+            });
+
+            if (taskData.length === 0) {
+                this.showErrorMessage('No hay tareas para exportar');
+                return;
+            }
 
             // Crear workbook
             const wb = XLSX.utils.book_new();
@@ -123,6 +185,17 @@ class ExportManager {
         try {
             const { projectName, exportDate } = this.getCurrentProjectData();
             const taskData = this.prepareTaskDataForExport();
+
+            console.log('Datos para PDF:', {
+                projectName,
+                tasks: taskData.length,
+                taskData: taskData
+            });
+
+            if (taskData.length === 0) {
+                this.showErrorMessage('No hay tareas para exportar');
+                return;
+            }
 
             // Crear nuevo documento PDF
             const { jsPDF } = window.jspdf;

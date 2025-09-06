@@ -17,6 +17,18 @@
         window.setupEventListeners = function() {
             console.log('🎯 setupEventListeners called by main.js (HTML VERSION)');
             
+            // DEBUG: Ver qué funciones están disponibles
+            console.log('🔍 Available functions:', {
+                'window.deleteTask': typeof window.deleteTask,
+                'window.editTask': typeof window.editTask,
+                'window.addTask': typeof window.addTask,
+                'window.projects': !!window.projects,
+                'window.activeProjectId': window.activeProjectId,
+                'window.TaskManager': !!window.TaskManager,
+                'window.updateProject': typeof window.updateProject,
+                'window.renderApp': typeof window.renderApp
+            });
+            
             // Event listener para formulario de agregar tarea
             const addTaskForm = document.getElementById('add-task-form');
             if (addTaskForm) {
@@ -35,37 +47,47 @@
                     console.log('Task data:', { taskName, taskStart, taskDuration, taskType, taskResource });
                     
                     if (taskName && taskStart && taskDuration) {
-                        // LLAMAR A LA FUNCIÓN REAL DE AGREGAR TAREA
+                        // LLAMAR A FUNCIONES REALES DIRECTAMENTE
                         try {
-                            if (window.addTask && typeof window.addTask === 'function') {
-                                console.log('📞 Calling window.addTask function');
-                                window.addTask();
-                            } else if (window.TaskManager && window.TaskManager.addTask) {
-                                console.log('📞 Calling TaskManager.addTask');
-                                window.TaskManager.addTask({
+                            // Crear tarea directamente en el proyecto activo
+                            const activeProject = window.projects?.find(p => p.id === window.activeProjectId);
+                            if (activeProject) {
+                                const newTask = {
+                                    id: Date.now(),
                                     name: taskName,
                                     startDate: taskStart,
                                     duration: parseInt(taskDuration),
                                     type: taskType,
-                                    resource: taskResource
-                                });
-                            } else {
-                                console.log('⚠️ No addTask function found, creating manual task');
-                                // Crear tarea manualmente si no hay función
-                                alert('✅ TAREA CREADA: ' + taskName + ' (' + taskDuration + ' días) - Guardando...');
+                                    resource: taskResource,
+                                    status: 'Pendiente',
+                                    progress: 0,
+                                    predecessor: null
+                                };
                                 
-                                // Resetear formulario después de guardar
-                                setTimeout(() => {
-                                    addTaskForm.reset();
-                                    console.log('✅ Form reset after saving');
-                                }, 100);
+                                activeProject.tasks.push(newTask);
+                                console.log('✅ Task added to project:', newTask);
+                                
+                                // Guardar en Firebase
+                                if (window.saveProjects) {
+                                    window.saveProjects();
+                                }
+                                
+                                // Actualizar interfaz
+                                if (window.renderApp) {
+                                    window.renderApp();
+                                }
+                                
+                                alert('✅ TAREA CREADA: ' + taskName);
+                                addTaskForm.reset();
+                            } else {
+                                alert('❌ No hay proyecto activo');
                             }
                         } catch (error) {
                             console.error('❌ Error adding task:', error);
                             alert('❌ Error al agregar tarea: ' + error.message);
                         }
                     } else {
-                        alert('❌ Complete todos los campos: ' + JSON.stringify({ taskName, taskStart, taskDuration }));
+                        alert('❌ Complete todos los campos');
                     }
                     return false;
                 });
@@ -87,25 +109,48 @@
                     if (editBtn) {
                         e.preventDefault();
                         e.stopPropagation();
-                        const taskId = editBtn.dataset.id;
+                        const taskId = parseInt(editBtn.dataset.id);
                         console.log('✏️ EDIT TASK CLICKED', taskId);
                         
                         try {
-                            // LLAMAR A LA FUNCIÓN REAL DE EDITAR
-                            if (window.editTask && typeof window.editTask === 'function') {
-                                console.log('📞 Calling window.editTask function');
-                                window.editTask(taskId);
-                            } else if (window.TaskManager && window.TaskManager.editTask) {
-                                console.log('📞 Calling TaskManager.editTask');
-                                window.TaskManager.editTask(taskId);
-                            } else {
-                                console.log('⚠️ No editTask function found, opening modal manually');
+                            // Obtener proyecto y tarea activos
+                            const activeProject = window.projects?.find(p => p.id === window.activeProjectId);
+                            const task = activeProject?.tasks.find(t => t.id === taskId);
+                            
+                            if (task && activeProject) {
+                                console.log('� Task found for editing:', task);
+                                
+                                // LLENAR EL MODAL CON LOS DATOS
                                 const editModal = document.getElementById('edit-modal');
+                                const editTaskName = document.getElementById('edit-task-name');
+                                const editTaskStart = document.getElementById('edit-task-start');
+                                const editTaskDuration = document.getElementById('edit-task-duration');
+                                const editTaskType = document.getElementById('edit-task-type');
+                                const editTaskStatus = document.getElementById('edit-task-status');
+                                const editTaskProgress = document.getElementById('edit-task-progress');
+                                const editTaskId = document.getElementById('edit-task-id');
+                                
+                                if (editTaskName) editTaskName.value = task.name || '';
+                                if (editTaskStart) editTaskStart.value = task.startDate || '';
+                                if (editTaskDuration) editTaskDuration.value = task.duration || 1;
+                                if (editTaskType) editTaskType.value = task.type || 'task';
+                                if (editTaskStatus) editTaskStatus.value = task.status || 'Pendiente';
+                                if (editTaskProgress) editTaskProgress.value = task.progress || 0;
+                                if (editTaskId) editTaskId.value = taskId;
+                                
+                                // Actualizar el span del progreso
+                                const progressValue = document.getElementById('edit-progress-value');
+                                if (progressValue) progressValue.textContent = task.progress || 0;
+                                
                                 if (editModal) {
                                     editModal.classList.remove('hidden');
-                                    console.log('✅ Edit modal opened manually');
+                                    console.log('✅ Edit modal opened with task data');
                                 }
-                                alert('✏️ EDITAR TAREA ID: ' + taskId + ' (Modal abierto)');
+                                
+                                alert('✏️ MODAL CARGADO CON DATOS: ' + task.name);
+                            } else {
+                                console.log('❌ Task or project not found');
+                                alert('❌ No se encontró la tarea o proyecto');
                             }
                         } catch (error) {
                             console.error('❌ Error editing task:', error);
@@ -117,45 +162,37 @@
                     if (deleteBtn) {
                         e.preventDefault();
                         e.stopPropagation();
-                        const taskId = deleteBtn.dataset.id;
+                        const taskId = parseInt(deleteBtn.dataset.id);
                         console.log('🗑️ DELETE TASK CLICKED', taskId);
                         
                         if (confirm('¿Eliminar tarea ID: ' + taskId + '?')) {
                             try {
-                                // LLAMAR A LA FUNCIÓN REAL DE ELIMINAR
-                                if (window.deleteTask && typeof window.deleteTask === 'function') {
-                                    console.log('📞 Calling window.deleteTask function');
+                                // ELIMINAR DIRECTAMENTE DEL PROYECTO
+                                const activeProject = window.projects?.find(p => p.id === window.activeProjectId);
+                                
+                                if (activeProject) {
+                                    const taskIndex = activeProject.tasks.findIndex(t => t.id === taskId);
                                     
-                                    // Obtener el proyecto activo
-                                    const activeProject = window.projects?.find(p => p.id === window.activeProjectId) || 
-                                                         window.activeProject || 
-                                                         { tasks: [] };
-                                    
-                                    console.log('🎯 Active project for deletion:', activeProject);
-                                    console.log('🗑️ Deleting task ID:', taskId);
-                                    
-                                    const result = window.deleteTask(activeProject, parseInt(taskId));
-                                    
-                                    if (result) {
-                                        console.log('✅ Task deleted successfully');
-                                        alert('🗑️ TAREA ELIMINADA CORRECTAMENTE');
+                                    if (taskIndex !== -1) {
+                                        const deletedTask = activeProject.tasks.splice(taskIndex, 1)[0];
+                                        console.log('✅ Task deleted from project:', deletedTask.name);
                                         
-                                        // Actualizar la interfaz
+                                        // Guardar en Firebase
+                                        if (window.saveProjects) {
+                                            window.saveProjects();
+                                        }
+                                        
+                                        // Actualizar interfaz
                                         if (window.renderApp) {
                                             window.renderApp();
-                                        } else if (window.updateGanttChart) {
-                                            window.updateGanttChart();
                                         }
+                                        
+                                        alert('🗑️ TAREA ELIMINADA: ' + deletedTask.name);
                                     } else {
-                                        console.log('❌ Failed to delete task');
-                                        alert('❌ Error: No se pudo eliminar la tarea');
+                                        alert('❌ Tarea no encontrada en el proyecto');
                                     }
-                                } else if (window.TaskManager && window.TaskManager.deleteTask) {
-                                    console.log('📞 Calling TaskManager.deleteTask');
-                                    window.TaskManager.deleteTask(taskId);
                                 } else {
-                                    console.log('⚠️ No deleteTask function found');
-                                    alert('🗑️ TAREA ID: ' + taskId + ' ELIMINADA (función no encontrada)');
+                                    alert('❌ No hay proyecto activo');
                                 }
                             } catch (error) {
                                 console.error('❌ Error deleting task:', error);

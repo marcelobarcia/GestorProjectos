@@ -457,22 +457,33 @@
                             
                             console.log('✅ New project created:', newProject);
                             
-                            // Guardar en Firebase
-                            if (window.saveProjects) {
-                                window.saveProjects();
+                            // PRIMERO mostrar mensaje de éxito con el nombre correcto
+                            const projectSuccessMessage = '🆕 PROYECTO CREADO: ' + safeName;
+                            console.log('Success message:', projectSuccessMessage);
+                            
+                            // DESPUÉS ejecutar operaciones asíncronas
+                            try {
+                                // Guardar en Firebase (sin esperar)
+                                if (window.saveProjects) {
+                                    window.saveProjects();
+                                }
+                                
+                                // Actualizar interfaz
+                                if (window.renderApp) {
+                                    window.renderApp();
+                                }
+                            } catch (asyncError) {
+                                console.error('Error in async operations:', asyncError);
                             }
                             
-                            // Actualizar interfaz
-                            if (window.renderApp) {
-                                window.renderApp();
-                            }
-                            
-                            alert('🆕 PROYECTO CREADO: ' + safeName);
+                            // Mostrar mensaje de éxito
+                            alert(projectSuccessMessage);
                             
                             // Cerrar el menú
                             const projectMenu = document.getElementById('project-menu');
                             if (projectMenu) {
                                 projectMenu.classList.add('hidden');
+                                console.log('✅ Project menu closed');
                             }
                             
                             // Cerrar también el modal de información
@@ -480,7 +491,28 @@
                             infoModals.forEach(modal => {
                                 modal.style.display = 'none';
                                 modal.classList.add('hidden');
+                                console.log('✅ Info modal closed');
                             });
+                            
+                            // Cerrar modales por clase y atributos específicos
+                            const dialogModals = document.querySelectorAll('[role="dialog"]');
+                            dialogModals.forEach(modal => {
+                                modal.style.display = 'none';
+                                modal.classList.add('hidden');
+                                console.log('✅ Dialog modal closed');
+                            });
+                            
+                            // Forzar el cierre del modal de información específico
+                            setTimeout(() => {
+                                const allModals = document.querySelectorAll('.fixed');
+                                allModals.forEach(modal => {
+                                    if (modal.textContent.includes('Información') || modal.textContent.includes('PROYECTO CREADO')) {
+                                        modal.style.display = 'none';
+                                        modal.classList.add('hidden');
+                                        console.log('✅ Forced modal closure');
+                                    }
+                                });
+                            }, 100);
                             
                         } catch (error) {
                             console.error('❌ Error creating project:', error);
@@ -638,8 +670,21 @@
                     if (modal) {
                         modal.style.display = 'none';
                         modal.classList.add('hidden');
-                        console.log('✅ Modal closed via Aceptar button');
+                        modal.remove(); // Eliminar completamente el modal
+                        console.log('✅ Modal closed and removed via Aceptar button');
                     }
+                    
+                    // Forzar cierre de todos los modales de información
+                    const allInfoModals = document.querySelectorAll('.fixed.inset-0');
+                    allInfoModals.forEach(infoModal => {
+                        if (infoModal.textContent.includes('Información') || 
+                            infoModal.textContent.includes('PROYECTO CREADO') ||
+                            infoModal.querySelector('button[textContent="Aceptar"]')) {
+                            infoModal.style.display = 'none';
+                            infoModal.classList.add('hidden');
+                            console.log('✅ Info modal force closed');
+                        }
+                    });
                 }
             });
             

@@ -203,3 +203,13 @@ function showNotification(message, type = 'info') {
         }, 300);
     }, 3000);
 }
+
+// Exponer funciones globalmente
+window.getActiveProject = getActiveProject;
+window.createProject = createProject;
+window.deleteProject = deleteProject;
+window.updateProject = updateProject;
+window.saveProjectsToFirebase = saveProjectsToFirebase;
+window.loadProjectsFromFirebase = loadProjectsFromFirebase;
+window.updateConnectionStatus = updateConnectionStatus;
+window.showNotification = showNotification;

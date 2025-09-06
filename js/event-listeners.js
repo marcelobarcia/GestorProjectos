@@ -357,3 +357,7 @@ function setupEventListeners() {
     eventListenersSetup = true;
     console.log('✅ Event listeners setup completed');
 }
+
+// Exponer funciones globalmente
+window.setupEventListeners = setupEventListeners;
+window.resetEventListeners = resetEventListeners;

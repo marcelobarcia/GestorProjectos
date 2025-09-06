@@ -155,3 +155,14 @@ function populatePredecessorDropdown(select, project, currentTaskIdToExclude = n
     });
     select.value = currentVal;
 }
+
+// Exponer funciones globalmente
+window.renderProjectUI = renderProjectUI;
+window.updateProjectHeader = updateProjectHeader;
+window.updateProjectDropdown = updateProjectDropdown;
+window.renderControls = renderControls;
+window.renderBaselinesUI = renderBaselinesUI;
+window.renderResourceList = renderResourceList;
+window.renderHolidayList = renderHolidayList;
+window.populateResourceDropdowns = populateResourceDropdowns;
+window.populatePredecessorDropdown = populatePredecessorDropdown;

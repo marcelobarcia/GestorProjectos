@@ -1,6 +1,3 @@
-// Import SSL security module
-import { initSSLSecurity } from './ssl-security.js';
-
 // Main application functions
 function render() {
     console.log('🎨 Rendering app...', {
@@ -46,6 +43,9 @@ function render() {
     debounceAutoSave();
 }
 
+// Exponer función globalmente  
+window.render = render;
+
 // Debounced auto-save function
 let autoSaveTimeout;
 function debounceAutoSave() {
@@ -61,9 +61,6 @@ function debounceAutoSave() {
 // Application initialization
 async function initializeApp() {
     console.log('🚀 Initializing app for user...');
-    
-    // Inicializar verificaciones de seguridad SSL
-    initSSLSecurity();
     
     // Verificar que las variables globales estén en estado limpio
     console.log('📊 Initial state check:', {
@@ -130,6 +127,9 @@ async function initializeApp() {
         window.autoBackupConfigured = true;
     }
 }
+
+// Exponer función globalmente
+window.initializeApp = initializeApp;
 
 function addFirebaseStatusIndicator() {
     const header = document.querySelector('header .flex');

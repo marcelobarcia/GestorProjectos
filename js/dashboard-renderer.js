@@ -55,3 +55,6 @@ function renderDashboard(project) {
         workloadContainer.innerHTML += `<div class="flex justify-between items-center"><p>${w.name}</p><p class="font-bold">${w.count} tareas</p></div>`;
     });
 }
+
+// Exponer función globalmente
+window.renderDashboard = renderDashboard;

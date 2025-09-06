@@ -63,3 +63,13 @@ function getWeekNumber(d) {
     var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
+
+// Exponer funciones globalmente
+window.parseDate = parseDate;
+window.formatDate = formatDate;
+window.isWorkingDay = isWorkingDay;
+window.getNextWorkingDay = getNextWorkingDay;
+window.getPreviousWorkingDay = getPreviousWorkingDay;
+window.addBusinessDays = addBusinessDays;
+window.subtractBusinessDays = subtractBusinessDays;
+window.getWeekNumber = getWeekNumber;

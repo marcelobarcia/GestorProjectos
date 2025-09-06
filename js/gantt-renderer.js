@@ -152,3 +152,8 @@ function renderGanttInfo(project) {
         if (durationElement) durationElement.textContent = `Duración: ${duration} días`;
     }
 }
+
+// Exponer funciones globalmente
+window.renderGantt = renderGantt;
+window.renderTaskList = renderTaskList;
+window.renderGanttInfo = renderGanttInfo;

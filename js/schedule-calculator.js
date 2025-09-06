@@ -72,3 +72,7 @@ function calculateCriticalPath(project) {
         }
     });
 }
+
+// Exponer funciones globalmente
+window.calculateProjectSchedule = calculateProjectSchedule;
+window.calculateCriticalPath = calculateCriticalPath;

@@ -377,29 +377,7 @@
     </div>
 
     <script>
-        // ===== TEST INMEDIATO DE JAVASCRIPT =====
-        alert('🔥 JAVASCRIPT CARGADO Y FUNCIONANDO!');
-        console.log('🔥 TEST: JavaScript ejecutándose');
-        
-        // PREVENIR RESETS DE FORMULARIOS GLOBALMENTE
-        document.addEventListener('submit', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            alert('📝 FORMULARIO INTERCEPTADO - NO SE RESETEA!');
-            console.log('Formulario interceptado:', e.target.id);
-            return false;
-        }, true);
-        
-        // INTERCEPTAR TODOS LOS CLICKS
-        document.addEventListener('click', function(e) {
-            console.log('🖱️ CLICK DETECTADO:', e.target.tagName, e.target.textContent, e.target.id);
-            
-            if (e.target.tagName === 'BUTTON') {
-                alert('🔘 BOTÓN CLICKEADO: ' + e.target.textContent);
-            }
-        }, true);
-        
-        // ===== FUNCIÓN SETUPEVENTLISTENERS REQUERIDA =====
+        // ===== FUNCIÓN SETUPEVENTLISTENERS INMEDIATA =====
         window.setupEventListeners = function() {
             console.log('🎯 setupEventListeners called by main.js');
             
@@ -416,7 +394,7 @@
                     
                     if (taskName && taskStart && taskDuration) {
                         alert('✅ TAREA CREADA: ' + taskName + ' (' + taskDuration + ' días)');
-                        addTaskForm.reset();
+                        // NO resetear el formulario aquí
                     } else {
                         alert('❌ Complete todos los campos');
                     }
@@ -434,6 +412,12 @@
                     if (editBtn) {
                         console.log('✏️ EDIT TASK CLICKED');
                         alert('✏️ EDITAR TAREA (FUNCIONA!)');
+                        
+                        // Mostrar modal de edición
+                        const editModal = document.getElementById('edit-modal');
+                        if (editModal) {
+                            editModal.classList.remove('hidden');
+                        }
                     }
                     
                     if (deleteBtn) {
@@ -446,8 +430,43 @@
                 console.log('✅ Task edit/delete listeners configured');
             }
             
+            // Event listener para cerrar modal
+            const cancelEditBtn = document.getElementById('cancel-edit');
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', function() {
+                    const editModal = document.getElementById('edit-modal');
+                    if (editModal) {
+                        editModal.classList.add('hidden');
+                    }
+                });
+            }
+            
             console.log('🚀 ALL EVENT LISTENERS CONFIGURED SUCCESSFULLY!');
         };
+        
+        // ===== TEST INMEDIATO DE JAVASCRIPT =====
+        alert('🔥 JAVASCRIPT CARGADO Y FUNCIONANDO!');
+        console.log('🔥 TEST: JavaScript ejecutándose');
+        console.log('✅ setupEventListeners function created:', typeof window.setupEventListeners);
+        
+        // PREVENIR RESETS DE FORMULARIOS GLOBALMENTE
+        document.addEventListener('submit', function(e) {
+            if (e.target.id === 'add-task-form') {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📝 FORMULARIO ADD-TASK INTERCEPTADO');
+                return false;
+            }
+        }, true);
+        
+        // INTERCEPTAR TODOS LOS CLICKS
+        document.addEventListener('click', function(e) {
+            console.log('🖱️ CLICK DETECTADO:', e.target.tagName, e.target.textContent, e.target.id);
+            
+            if (e.target.tagName === 'BUTTON') {
+                alert('🔘 BOTÓN CLICKEADO: ' + e.target.textContent);
+            }
+        }, true);
         
         document.addEventListener('DOMContentLoaded', () => {
             alert('🚀 DOM LOADED - Configurando aplicación...');

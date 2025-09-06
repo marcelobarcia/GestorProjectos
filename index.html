@@ -125,22 +125,85 @@
                                 const editTaskName = document.getElementById('edit-task-name');
                                 const editTaskStart = document.getElementById('edit-task-start');
                                 const editTaskDuration = document.getElementById('edit-task-duration');
+                                const editTaskEnd = document.getElementById('edit-task-end');
                                 const editTaskType = document.getElementById('edit-task-type');
                                 const editTaskStatus = document.getElementById('edit-task-status');
                                 const editTaskProgress = document.getElementById('edit-task-progress');
+                                const editProgressValue = document.getElementById('edit-progress-value');
                                 const editTaskId = document.getElementById('edit-task-id');
                                 
-                                if (editTaskName) editTaskName.value = task.name || '';
-                                if (editTaskStart) editTaskStart.value = task.startDate || '';
-                                if (editTaskDuration) editTaskDuration.value = task.duration || 1;
-                                if (editTaskType) editTaskType.value = task.type || 'task';
-                                if (editTaskStatus) editTaskStatus.value = task.status || 'Pendiente';
-                                if (editTaskProgress) editTaskProgress.value = task.progress || 0;
-                                if (editTaskId) editTaskId.value = taskId;
+                                console.log('📝 Filling modal with task data:', {
+                                    name: task.name,
+                                    startDate: task.startDate,
+                                    duration: task.duration,
+                                    endDate: task.endDate,
+                                    status: task.status,
+                                    progress: task.progress
+                                });
                                 
-                                // Actualizar el span del progreso
-                                const progressValue = document.getElementById('edit-progress-value');
-                                if (progressValue) progressValue.textContent = task.progress || 0;
+                                // Llenar campos básicos
+                                if (editTaskName) {
+                                    editTaskName.value = task.name || '';
+                                    console.log('✅ Name filled:', task.name);
+                                }
+                                
+                                if (editTaskStart) {
+                                    // Asegurar formato correcto de fecha
+                                    let startDate = task.startDate;
+                                    if (startDate && !startDate.includes('-')) {
+                                        // Convertir formato si es necesario
+                                        const date = new Date(startDate);
+                                        startDate = date.toISOString().split('T')[0];
+                                    }
+                                    editTaskStart.value = startDate || '';
+                                    console.log('✅ Start date filled:', startDate);
+                                }
+                                
+                                if (editTaskDuration) {
+                                    editTaskDuration.value = task.duration || 1;
+                                    console.log('✅ Duration filled:', task.duration);
+                                }
+                                
+                                if (editTaskType) {
+                                    editTaskType.value = task.type || 'task';
+                                    console.log('✅ Type filled:', task.type);
+                                }
+                                
+                                if (editTaskStatus) {
+                                    editTaskStatus.value = task.status || 'Pendiente';
+                                    console.log('✅ Status filled:', task.status);
+                                }
+                                
+                                if (editTaskProgress) {
+                                    const progressValue = task.progress || 0;
+                                    editTaskProgress.value = progressValue;
+                                    console.log('✅ Progress filled:', progressValue);
+                                    
+                                    // Actualizar el span del progreso
+                                    if (editProgressValue) {
+                                        editProgressValue.textContent = progressValue;
+                                    }
+                                }
+                                
+                                if (editTaskId) {
+                                    editTaskId.value = taskId;
+                                    console.log('✅ Task ID filled:', taskId);
+                                }
+                                
+                                // Calcular fecha de fin
+                                if (editTaskStart && editTaskDuration && editTaskEnd) {
+                                    const startDate = editTaskStart.value;
+                                    const duration = parseInt(editTaskDuration.value) || 0;
+                                    
+                                    if (startDate && duration > 0) {
+                                        const start = new Date(startDate);
+                                        const end = new Date(start);
+                                        end.setDate(start.getDate() + duration - 1);
+                                        const endDateString = end.toISOString().split('T')[0];
+                                        editTaskEnd.value = endDateString;
+                                        console.log('✅ End date calculated:', endDateString);
+                                    }
+                                }
                                 
                                 if (editModal) {
                                     editModal.classList.remove('hidden');
@@ -328,6 +391,89 @@
             });
             
             console.log('🚀 setupEventListeners COMPLETED SUCCESSFULLY!');
+            
+            // ===== FUNCIONES ADICIONALES PARA FECHAS =====
+            
+            // Event listener para actualizar fecha de fin automáticamente
+            const taskStartInput = document.getElementById('task-start');
+            const taskDurationInput = document.getElementById('task-duration');
+            const taskEndInput = document.getElementById('task-end');
+            
+            function calculateEndDate() {
+                const startDate = taskStartInput?.value;
+                const duration = parseInt(taskDurationInput?.value) || 0;
+                
+                if (startDate && duration > 0) {
+                    const start = new Date(startDate);
+                    const end = new Date(start);
+                    end.setDate(start.getDate() + duration - 1); // -1 porque incluye el día de inicio
+                    
+                    const endDateString = end.toISOString().split('T')[0];
+                    if (taskEndInput) {
+                        taskEndInput.value = endDateString;
+                    }
+                    console.log('📅 End date calculated:', endDateString);
+                }
+            }
+            
+            if (taskStartInput) {
+                taskStartInput.addEventListener('change', calculateEndDate);
+                console.log('✅ Start date listener added');
+            }
+            
+            if (taskDurationInput) {
+                taskDurationInput.addEventListener('input', calculateEndDate);
+                taskDurationInput.addEventListener('change', calculateEndDate);
+                console.log('✅ Duration listeners added');
+            }
+            
+            // Lo mismo para el modal de edición
+            const editTaskStartInput = document.getElementById('edit-task-start');
+            const editTaskDurationInput = document.getElementById('edit-task-duration');
+            const editTaskEndInput = document.getElementById('edit-task-end');
+            const editProgressInput = document.getElementById('edit-task-progress');
+            const editProgressValue = document.getElementById('edit-progress-value');
+            
+            function calculateEditEndDate() {
+                const startDate = editTaskStartInput?.value;
+                const duration = parseInt(editTaskDurationInput?.value) || 0;
+                
+                if (startDate && duration > 0) {
+                    const start = new Date(startDate);
+                    const end = new Date(start);
+                    end.setDate(start.getDate() + duration - 1);
+                    
+                    const endDateString = end.toISOString().split('T')[0];
+                    if (editTaskEndInput) {
+                        editTaskEndInput.value = endDateString;
+                    }
+                    console.log('📅 Edit end date calculated:', endDateString);
+                }
+            }
+            
+            function updateProgressValue() {
+                const progress = editProgressInput?.value || 0;
+                if (editProgressValue) {
+                    editProgressValue.textContent = progress;
+                }
+            }
+            
+            if (editTaskStartInput) {
+                editTaskStartInput.addEventListener('change', calculateEditEndDate);
+                console.log('✅ Edit start date listener added');
+            }
+            
+            if (editTaskDurationInput) {
+                editTaskDurationInput.addEventListener('input', calculateEditEndDate);
+                editTaskDurationInput.addEventListener('change', calculateEditEndDate);
+                console.log('✅ Edit duration listeners added');
+            }
+            
+            if (editProgressInput) {
+                editProgressInput.addEventListener('input', updateProgressValue);
+                editProgressInput.addEventListener('change', updateProgressValue);
+                console.log('✅ Edit progress listeners added');
+            }
         };
         
         console.log('✅ setupEventListeners function created in index.html:', typeof window.setupEventListeners);

@@ -293,6 +293,21 @@
                     e.stopPropagation();
                     console.log('📂 PROJECT MENU BUTTON CLICKED');
                     
+                    // CERRAR CUALQUIER MODAL ABIERTO PRIMERO
+                    const infoModals = document.querySelectorAll('.fixed.inset-0.bg-gray-600.bg-opacity-50');
+                    infoModals.forEach(modal => {
+                        modal.style.display = 'none';
+                        modal.classList.add('hidden');
+                    });
+                    
+                    // Cerrar modal de información específico
+                    const infoModal = document.querySelector('[role="dialog"]');
+                    if (infoModal) {
+                        infoModal.style.display = 'none';
+                        infoModal.classList.add('hidden');
+                        console.log('✅ Info modal closed');
+                    }
+                    
                     const projectMenu = document.getElementById('project-menu');
                     if (projectMenu) {
                         const isHidden = projectMenu.classList.contains('hidden');
@@ -300,13 +315,15 @@
                         if (isHidden) {
                             projectMenu.classList.remove('hidden');
                             console.log('✅ Project menu opened');
-                            alert('📂 MENÚ DE PROYECTOS ABIERTO');
+                            
+                            // NO mostrar alert que bloquea
+                            console.log('📂 MENÚ DE PROYECTOS ABIERTO (sin alert)');
                         } else {
                             projectMenu.classList.add('hidden');
                             console.log('✅ Project menu closed');
                         }
                     } else {
-                        alert('❌ No se encontró el menú de proyectos');
+                        console.log('❌ No se encontró el menú de proyectos');
                     }
                 });
                 console.log('✅ Project menu button listener configured');
@@ -387,6 +404,46 @@
                         projectMenu.classList.add('hidden');
                         console.log('✅ Project menu closed by outside click');
                     }
+                }
+            });
+            
+            // ===== CERRAR MODALES DE INFORMACIÓN =====
+            
+            // Event listener para botones "Aceptar" de modales
+            document.addEventListener('click', function(e) {
+                if (e.target.textContent === 'Aceptar' && e.target.tagName === 'BUTTON') {
+                    console.log('✅ Aceptar button clicked - closing modal');
+                    
+                    // Buscar y cerrar el modal padre
+                    const modal = e.target.closest('.fixed.inset-0') || 
+                                 e.target.closest('[role="dialog"]') ||
+                                 e.target.closest('.modal');
+                    
+                    if (modal) {
+                        modal.style.display = 'none';
+                        modal.classList.add('hidden');
+                        console.log('✅ Modal closed via Aceptar button');
+                    }
+                }
+            });
+            
+            // Event listener global para ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    // Cerrar modales
+                    const modals = document.querySelectorAll('.fixed.inset-0');
+                    modals.forEach(modal => {
+                        modal.style.display = 'none';
+                        modal.classList.add('hidden');
+                    });
+                    
+                    // Cerrar menú de proyectos
+                    const projectMenu = document.getElementById('project-menu');
+                    if (projectMenu) {
+                        projectMenu.classList.add('hidden');
+                    }
+                    
+                    console.log('✅ ESC pressed - all modals and menus closed');
                 }
             });
             

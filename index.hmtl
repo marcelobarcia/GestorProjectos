@@ -376,49 +376,133 @@
         </div>
     </div>
 
-    <!-- JavaScript Modules -->
-    <!-- Core utilities first -->
-    <script src="js/constants.js"></script>
-    <script src="js/dom-selectors.js"></script>
-    <script src="js/date-utils.js"></script>
-    
-    <!-- UI components -->
-    <script src="js/modal-manager.js"></script>
-    
-    <!-- Data management -->
-    <script src="js/auth-manager.js"></script>
-    <script src="js/firebase-manager.js"></script>
-    <script src="js/task-manager.js"></script>
-    <script src="js/project-manager.js"></script>
-    <script src="js/schedule-calculator.js"></script>
-    
-    <!-- Rendering engines -->
-    <script src="js/gantt-timeline.js"></script>
-    <script src="js/gantt-chart.js"></script>
-    <script src="js/gantt-renderer.js"></script>
-    <script src="js/ui-renderer.js"></script>
-    
-    <!-- User interaction -->
-    <script src="js/form-handlers.js"></script>
-    <script src="js/event-listeners.js"></script>
-    
-    <!-- Main application -->
-    <script src="js/main.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Application starting...');
+            console.log('🚀 Starting application...');
             
-            // Esperar un poco para que todos los scripts se carguen
-            setTimeout(() => {
-                // Initialize application
-                if (window.initializeApp) {
-                    console.log('📱 Calling initializeApp()');
-                    window.initializeApp();
-                } else {
-                    console.error('❌ initializeApp function not found');
-                }
-            }, 100); // Reducido a 100ms
+            // Constantes
+            const STATUS_COLORS = { 
+                'Pendiente': '#94a3b8', 
+                'En Progreso': '#f59e0b', 
+                'Completada': '#16a34a', 
+                'Atrasada': '#dc2626', 
+                'Fase': '#475569' 
+            };
+            
+            const VIEW_CONFIGS = { 
+                day: { unitWidth: 40 }, 
+                week: { unitWidth: 70 }, 
+                month: { unitWidth: 200 }, 
+                year: { unitWidth: 350 } 
+            };
+            
+            // Variables globales
+            let projects = [];
+            let activeProjectId = null;
+            
+            // DOM Elements
+            const mainContent = document.getElementById('main-content');
+            const noProjectView = document.getElementById('no-project-view');
+            const createFirstProjectBtn = document.getElementById('create-first-project-btn');
+            const projectNameInput = document.getElementById('project-name-input');
+            const projectMenuBtn = document.getElementById('project-menu-btn');
+            const projectMenu = document.getElementById('project-menu');
+            const projectList = document.getElementById('project-list');
+            const newProjectBtn = document.getElementById('new-project-btn');
+            const deleteProjectBtn = document.getElementById('delete-project-btn');
+            const mainViewSwitcher = document.getElementById('main-view-switcher');
+            const ganttView = document.getElementById('gantt-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            const calendarView = document.getElementById('calendar-view');
+            const taskForm = document.getElementById('add-task-form');
+            const ganttHeaderTimeline = document.getElementById('gantt-header-timeline');
+            const ganttTaskList = document.getElementById('gantt-task-list');
+            const ganttChartArea = document.getElementById('gantt-chart-area');
+            const ganttViewSwitcher = document.getElementById('gantt-view-switcher');
+            const editModal = document.getElementById('edit-modal');
+            const editTaskForm = document.getElementById('edit-task-form');
+            const cancelEditBtn = document.getElementById('cancel-edit');
+            const workWeekendsToggle = document.getElementById('work-weekends-toggle');
+            const addHolidayForm = document.getElementById('add-holiday-form');
+            const holidayListContainer = document.getElementById('holiday-list-container');
+            const saveBaselineBtn = document.getElementById('save-baseline-btn');
+            const baselineSelect = document.getElementById('baseline-select');
+            const baselineListContainer = document.getElementById('baseline-list-container');
+            const criticalPathToggle = document.getElementById('critical-path-toggle');
+            const addResourceForm = document.getElementById('add-resource-form');
+            const resourceListContainer = document.getElementById('resource-list-container');
+
+            console.log('✅ DOM elements loaded');
+            
+            // TEST: Event listeners básicos INMEDIATOS
+            if (newProjectBtn) {
+                console.log('✅ Found newProjectBtn, adding listener');
+                newProjectBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('🆕 NEW PROJECT CLICKED!');
+                    const name = prompt('Nombre del proyecto:');
+                    if (name) {
+                        console.log('Creating project:', name);
+                        alert('Proyecto: ' + name + ' (funcionalidad básica funcionando)');
+                    }
+                });
+            } else {
+                console.error('❌ newProjectBtn not found');
+            }
+            
+            if (ganttViewSwitcher) {
+                console.log('✅ Found ganttViewSwitcher, adding listener');
+                ganttViewSwitcher.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.view-btn');
+                    if (btn) {
+                        console.log('� GANTT VIEW CLICKED:', btn.dataset.view);
+                        alert('Vista cambiada a: ' + btn.dataset.view);
+                    }
+                });
+            } else {
+                console.error('❌ ganttViewSwitcher not found');
+            }
+            
+            if (taskForm) {
+                console.log('✅ Found taskForm, adding listener');
+                taskForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('📝 TASK FORM SUBMITTED!');
+                    alert('Formulario de tarea enviado (funcionalidad básica funcionando)');
+                });
+            } else {
+                console.error('❌ taskForm not found');
+            }
+            
+            console.log('🎯 Basic listeners configured');
+            
+            // Crear proyecto demo para pruebas
+            if (projects.length === 0) {
+                projects.push({
+                    id: Date.now(),
+                    name: 'Proyecto de Prueba',
+                    tasks: [],
+                    resources: [],
+                    holidays: [],
+                    baselines: [],
+                    workWeekends: false,
+                    showCriticalPath: false,
+                    selectedBaselineId: null,
+                    currentGanttView: 'day'
+                });
+                activeProjectId = projects[0].id;
+                console.log('📦 Demo project created');
+            }
+            
+            // Mostrar contenido principal
+            if (mainContent && noProjectView) {
+                mainContent.classList.remove('hidden');
+                noProjectView.classList.add('hidden');
+                console.log('👁️ UI visible');
+            }
+            
+            console.log('✅ Application started successfully');
+        });
         });
     </script>
 </body>

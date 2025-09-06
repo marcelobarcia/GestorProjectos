@@ -3,22 +3,25 @@ function renderGantt(project) {
     renderTaskList(project);
     
     if (project.tasks.length === 0) {
-        ganttTaskList.innerHTML = '<p class="p-4 text-slate-500">No hay tareas.</p>';
-        ganttHeaderTimeline.innerHTML = '';
-        ganttChartArea.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 italic">Añade tareas para ver el diagrama de Gantt</div>';
+        if (window.ganttTaskList) window.ganttTaskList.innerHTML = '<p class="p-4 text-slate-500">No hay tareas.</p>';
+        if (window.ganttHeaderTimeline) window.ganttHeaderTimeline.innerHTML = '';
+        if (window.ganttChartArea) window.ganttChartArea.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 italic">Añade tareas para ver el diagrama de Gantt</div>';
         renderGanttInfo(project); // Actualizar info panel incluso sin tareas
         return;
     }
     
-    const projectStartDate = project.tasks.reduce((min, t) => (parseDate(t.start) < min ? parseDate(t.start) : min), parseDate(project.tasks[0].start));
-    const projectEndDate = project.tasks.reduce((max, t) => (parseDate(t.end) > max ? parseDate(t.end) : max), parseDate(project.tasks[0].end));
-    const { totalWidth, timelineStartDate, timelineEndDate } = renderTimeline(projectStartDate, projectEndDate, project);
-    renderChart(timelineStartDate, timelineEndDate, totalWidth, project);
+    const projectStartDate = project.tasks.reduce((min, t) => (window.parseDate(t.start) < min ? window.parseDate(t.start) : min), window.parseDate(project.tasks[0].start));
+    const projectEndDate = project.tasks.reduce((max, t) => (window.parseDate(t.end) > max ? window.parseDate(t.end) : max), window.parseDate(project.tasks[0].end));
+    const { totalWidth, timelineStartDate, timelineEndDate } = window.renderTimeline ? window.renderTimeline(projectStartDate, projectEndDate, project) : { totalWidth: 0, timelineStartDate: projectStartDate, timelineEndDate: projectEndDate };
+    if (window.renderChart) window.renderChart(timelineStartDate, timelineEndDate, totalWidth, project);
     renderGanttInfo(project); // Actualizar panel de información
 }
 
 function renderTaskList(project) {
     const rowHeight = 64;
+    const ganttTaskList = window.ganttTaskList;
+    if (!ganttTaskList) return;
+    
     ganttTaskList.innerHTML = '';
     
     project.tasks.forEach(task => {
@@ -27,14 +30,14 @@ function renderTaskList(project) {
         el.className = `flex items-center border-b border-slate-200 text-sm ${task.type === 'phase' ? 'font-bold bg-slate-50' : ''}`;
         el.style.height = `${rowHeight}px`;
 
-        const statusColor = task.type === 'phase' ? STATUS_COLORS.Fase : STATUS_COLORS[task.status];
+        const statusColor = task.type === 'phase' ? (window.STATUS_COLORS ? window.STATUS_COLORS.Fase : '#475569') : (window.STATUS_COLORS ? window.STATUS_COLORS[task.status] : '#64748b');
         const iconHtml = task.isMilestone
             ? `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>`
             : `<span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${statusColor || '#64748b'}"></span>`;
 
         // Calcular duración en días
-        const startDate = parseDate(task.start);
-        const endDate = parseDate(task.end);
+        const startDate = window.parseDate ? window.parseDate(task.start) : new Date(task.start);
+        const endDate = window.parseDate ? window.parseDate(task.end) : new Date(task.end);
         const duration = Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1;
 
         el.innerHTML = `
@@ -54,12 +57,12 @@ function renderTaskList(project) {
                 
                 <!-- Columna 2: Fecha de Inicio -->
                 <div class="text-center flex flex-col justify-center">
-                    <span class="text-xs font-medium">${formatDate(startDate)}</span>
+                    <span class="text-xs font-medium">${window.formatDate ? window.formatDate(startDate) : startDate}</span>
                 </div>
                 
                 <!-- Columna 3: Fecha de Fin -->
                 <div class="text-center flex flex-col justify-center">
-                    <span class="text-xs font-medium">${formatDate(endDate)}</span>
+                    <span class="text-xs font-medium">${window.formatDate ? window.formatDate(endDate) : endDate}</span>
                 </div>
                 
                 <!-- Columna 4: Duración -->
@@ -89,7 +92,7 @@ function renderTaskList(project) {
                 </div>
             </div>
         `;
-        ganttTaskList.appendChild(el);
+        if (ganttTaskList) ganttTaskList.appendChild(el);
     });
 }
 
@@ -147,8 +150,8 @@ function renderGanttInfo(project) {
         const endDateElement = document.getElementById('gantt-info-end-date');
         const durationElement = document.getElementById('gantt-info-duration');
         
-        if (startDateElement) startDateElement.textContent = `Inicio: ${formatDate(startDate)}`;
-        if (endDateElement) endDateElement.textContent = `Fin: ${formatDate(endDate)}`;
+        if (startDateElement) startDateElement.textContent = `Inicio: ${window.formatDate ? window.formatDate(startDate) : startDate}`;
+        if (endDateElement) endDateElement.textContent = `Fin: ${window.formatDate ? window.formatDate(endDate) : endDate}`;
         if (durationElement) durationElement.textContent = `Duración: ${duration} días`;
     }
 }

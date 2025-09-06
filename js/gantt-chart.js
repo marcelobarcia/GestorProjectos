@@ -397,3 +397,8 @@ function removeDropZoneIndicator(chartWrapper) {
         indicator.remove();
     }
 }
+
+// Exponer funciones globalmente
+window.renderChart = renderChart;
+window.createDropZoneIndicator = createDropZoneIndicator;
+window.removeDropZoneIndicator = removeDropZoneIndicator;

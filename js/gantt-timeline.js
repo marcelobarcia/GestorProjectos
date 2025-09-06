@@ -1,5 +1,8 @@
 // Gantt Timeline and Chart functions
 function renderTimeline(startDate, endDate, project) {
+    const ganttHeaderTimeline = window.ganttHeaderTimeline;
+    if (!ganttHeaderTimeline) return { totalWidth: 0, timelineStartDate: startDate, timelineEndDate: endDate };
+    
     ganttHeaderTimeline.innerHTML = '';
     const wrapper = document.createElement('div');
     wrapper.className = 'relative flex h-full';
@@ -10,7 +13,7 @@ function renderTimeline(startDate, endDate, project) {
     timelineEndDate.setUTCDate(timelineEndDate.getUTCDate() + 3); // Add padding
 
     let currentDate = new Date(timelineStartDate);
-    const unitWidth = VIEW_CONFIGS[project.currentGanttView].unitWidth;
+    const unitWidth = window.VIEW_CONFIGS ? window.VIEW_CONFIGS[project.currentGanttView].unitWidth : 200;
     const topRow = document.createElement('div');
     topRow.className = 'absolute top-0 h-1/2 w-full flex';
     const bottomRow = document.createElement('div');
@@ -28,7 +31,7 @@ function renderTimeline(startDate, endDate, project) {
                 break;
             case 'week':
                 topLabelText = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-                bottomLabelText = `S${getWeekNumber(currentDate)}`;
+                bottomLabelText = `S${window.getWeekNumber ? window.getWeekNumber(currentDate) : 1}`;
                 incrementDays = 7;
                 break;
             case 'month':
@@ -54,7 +57,7 @@ function renderTimeline(startDate, endDate, project) {
         col.className = 'flex-shrink-0 text-center border-r border-slate-200 text-xs flex items-center justify-center';
         col.style.width = `${unitWidth}px`;
         col.textContent = bottomLabelText;
-        if (project.currentGanttView === 'day' && !isWorkingDay(currentDate, project)) col.classList.add('day-column-non-working');
+        if (project.currentGanttView === 'day' && window.isWorkingDay && !window.isWorkingDay(currentDate, project)) col.classList.add('day-column-non-working');
         bottomRow.appendChild(col);
         totalWidth += unitWidth;
         if (incrementDays > 0) currentDate.setUTCDate(currentDate.getUTCDate() + incrementDays);
@@ -74,9 +77,13 @@ function renderTimeline(startDate, endDate, project) {
     ganttHeaderTimeline.appendChild(wrapper);
     
     // Update the chart area background to match timeline
+    const ganttChartArea = window.ganttChartArea;
     if (ganttChartArea) {
         ganttChartArea.style.backgroundSize = `${unitWidth}px 64px`;
     }
     
     return { totalWidth, timelineStartDate, timelineEndDate };
 }
+
+// Exponer función globalmente
+window.renderTimeline = renderTimeline;

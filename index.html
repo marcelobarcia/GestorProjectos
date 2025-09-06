@@ -76,9 +76,15 @@
                                     window.saveProjects();
                                 }
                                 
-                                // Actualizar interfaz
-                                if (window.renderApp) {
+                                // Actualizar interfaz usando la función correcta
+                                if (window.render) {
+                                    window.render();
+                                    console.log('✅ Interface updated via window.render()');
+                                } else if (window.renderApp) {
                                     window.renderApp();
+                                    console.log('✅ Interface updated via window.renderApp()');
+                                } else {
+                                    console.warn('⚠️ No render function available');
                                 }
                                 
                                 alert('✅ TAREA CREADA: ' + taskName);
@@ -404,9 +410,15 @@
                                             window.saveProjects();
                                         }
                                         
-                                        // Actualizar interfaz
-                                        if (window.renderApp) {
+                                        // Actualizar interfaz usando la función correcta
+                                        if (window.render) {
+                                            window.render();
+                                            console.log('✅ Interface updated via window.render()');
+                                        } else if (window.renderApp) {
                                             window.renderApp();
+                                            console.log('✅ Interface updated via window.renderApp()');
+                                        } else {
+                                            console.warn('⚠️ No render function available');
                                         }
                                         
                                         alert('🗑️ TAREA ELIMINADA: ' + deletedTask.name);
@@ -549,9 +561,15 @@
                                     window.saveProjects();
                                 }
                                 
-                                // Actualizar interfaz
-                                if (window.renderApp) {
+                                // Actualizar interfaz usando la función correcta
+                                if (window.render) {
+                                    window.render();
+                                    console.log('✅ Interface updated via window.render()');
+                                } else if (window.renderApp) {
                                     window.renderApp();
+                                    console.log('✅ Interface updated via window.renderApp()');
+                                } else {
+                                    console.warn('⚠️ No render function available');
                                 }
                             } catch (asyncError) {
                                 console.error('Error in async operations:', asyncError);
@@ -817,9 +835,15 @@
                                     window.saveProjects();
                                 }
                                 
-                                // Actualizar interfaz
-                                if (window.renderApp) {
+                                // Actualizar interfaz usando la función correcta
+                                if (window.render) {
+                                    window.render();
+                                    console.log('✅ Interface updated via window.render()');
+                                } else if (window.renderApp) {
                                     window.renderApp();
+                                    console.log('✅ Interface updated via window.renderApp()');
+                                } else {
+                                    console.warn('⚠️ No render function available');
                                 }
                                 
                                 alert('🗑️ PROYECTO ELIMINADO: ' + deletedProject.name);

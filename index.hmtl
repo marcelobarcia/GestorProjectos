@@ -377,7 +377,30 @@
     </div>
 
     <script>
+        // ===== TEST INMEDIATO DE JAVASCRIPT =====
+        alert('🔥 JAVASCRIPT CARGADO Y FUNCIONANDO!');
+        console.log('🔥 TEST: JavaScript ejecutándose');
+        
+        // PREVENIR RESETS DE FORMULARIOS GLOBALMENTE
+        document.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            alert('📝 FORMULARIO INTERCEPTADO - NO SE RESETEA!');
+            console.log('Formulario interceptado:', e.target.id);
+            return false;
+        }, true);
+        
+        // INTERCEPTAR TODOS LOS CLICKS
+        document.addEventListener('click', function(e) {
+            console.log('🖱️ CLICK DETECTADO:', e.target.tagName, e.target.textContent, e.target.id);
+            
+            if (e.target.tagName === 'BUTTON') {
+                alert('🔘 BOTÓN CLICKEADO: ' + e.target.textContent);
+            }
+        }, true);
+        
         document.addEventListener('DOMContentLoaded', () => {
+            alert('🚀 DOM LOADED - Configurando aplicación...');
             console.log('🚀 Starting application...');
             
             // Constantes

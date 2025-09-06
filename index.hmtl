@@ -5,6 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Proyectos - Carta Gantt</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // ===== FUNCIÓN CRÍTICA ANTES QUE TODO =====
+        console.log('🚨 SCRIPT HEAD EJECUTÁNDOSE PRIMERO');
+        
+        window.setupEventListeners = function() {
+            console.log('🎯 setupEventListeners called by main.js (HEAD VERSION)');
+            
+            // Event listener para formulario de agregar tarea
+            const addTaskForm = document.getElementById('add-task-form');
+            if (addTaskForm) {
+                console.log('✅ Found add-task-form, adding listener');
+                addTaskForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('✅ ADD TASK FORM SUBMIT INTERCEPTED');
+                    
+                    const taskName = document.getElementById('task-name')?.value;
+                    const taskStart = document.getElementById('task-start')?.value;
+                    const taskDuration = document.getElementById('task-duration')?.value;
+                    
+                    console.log('Task data:', { taskName, taskStart, taskDuration });
+                    
+                    if (taskName && taskStart && taskDuration) {
+                        alert('✅ TAREA CREADA: ' + taskName + ' (' + taskDuration + ' días)');
+                        // NO resetear aquí
+                    } else {
+                        alert('❌ Complete todos los campos');
+                    }
+                    return false;
+                });
+            } else {
+                console.log('❌ add-task-form not found yet');
+            }
+            
+            // Event listener para botones de editar/eliminar
+            const ganttTaskList = document.getElementById('gantt-task-list');
+            if (ganttTaskList) {
+                console.log('✅ Found gantt-task-list, adding click listener');
+                ganttTaskList.addEventListener('click', function(e) {
+                    console.log('🖱️ Click in task list:', e.target);
+                    
+                    const editBtn = e.target.closest('.edit-btn');
+                    const deleteBtn = e.target.closest('.delete-btn');
+                    
+                    if (editBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('✏️ EDIT TASK CLICKED');
+                        alert('✏️ EDITAR TAREA (FUNCIONA!)');
+                        
+                        const editModal = document.getElementById('edit-modal');
+                        if (editModal) {
+                            editModal.classList.remove('hidden');
+                        }
+                        return false;
+                    }
+                    
+                    if (deleteBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🗑️ DELETE TASK CLICKED');
+                        if (confirm('¿Eliminar tarea?')) {
+                            alert('🗑️ TAREA ELIMINADA (FUNCIONA!)');
+                        }
+                        return false;
+                    }
+                });
+            } else {
+                console.log('❌ gantt-task-list not found yet');
+            }
+            
+            console.log('🚀 setupEventListeners COMPLETED!');
+        };
+        
+        console.log('✅ setupEventListeners function created in HEAD:', typeof window.setupEventListeners);
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
